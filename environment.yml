@@ -1,0 +1,6 @@
+name: tumor-classification
+dependencies:
+  - numpy
+  - tensorflow
+  - keras
+  - imageio
