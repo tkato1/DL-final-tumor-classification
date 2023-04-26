@@ -4,9 +4,11 @@ import imageio
 import mat73
 import numpy as np
 import matplotlib.pyplot as plt
+import cv2
+import argparse
+
 
 from skimage.measure import block_reduce
-
 
 # specify the input directory containing .mat files
 input_dir = "data/set1"
@@ -28,17 +30,23 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1):
             data = mat73.loadmat(os.path.join(input_dir, filename))['cjdata'] #dict_keys(['PID', 'image', 'label', 'tumorBorder', 'tumorMask'])
             image_data = np.asarray(data['image'].astype('uint8'))
             if process == "segment":
-                image_data = np.where(data['tumorMask'], image_data, 0) #masking image with tumorMask
-                image_data=  crop_nonzero(image_data)
-                image_data = padding(image_data, 128, 128)
+                masked_image = np.where(data['tumorMask'], image_data, 0) #masking image with tumorMask
+                cropped_image = crop_nonzero(masked_image) #cropped it
+                image_data = cv2.resize(cropped_image, (512,512), interpolation=cv2.INTER_AREA) #scaled to 512x512
             if process == "crop":
-                image_data=  crop_nonzero(image_data)
-                image_data = padding(image_data, 128, 128)
+                masked_image = np.where(data['tumorMask'], image_data, 0) #this is only to retrieve the crop indices
+                cropped_masked_image, indices = crop_nonzero(masked_image, include_index=True) #cropped it
+                a, b, c, d = indices
+                # visualize(cropped_masked_image) #masked
+                # visualize(image_data[a:b, c:d]) #unmasked
+                image_data = cv2.resize(image_data[a:b, c:d], (512,512), interpolation=cv2.INTER_AREA) #scaled to 512x512
+
             downsampled_image = downsample(image_data, factor=downsampling_factor) #downsampling image
             X[i] = downsampled_image
             y[i] = data['label']
 
     return X, y
+
 
 def downsample(image, factor=1):
     """
@@ -47,6 +55,7 @@ def downsample(image, factor=1):
     """
     return block_reduce(image, block_size=(factor, factor), func=np.mean)
 
+
 def visualize(image):
     """
     image: a 2d array where each entry represents pixel of an image
@@ -54,7 +63,8 @@ def visualize(image):
     plt.imshow(image, cmap="gray")
     plt.show()
 
-def crop_nonzero(arr):
+
+def crop_nonzero(arr, include_index=False):
     # find indices of all non-zero elements in the array
     non_zero_indices = np.argwhere(arr != 0)
 
@@ -77,35 +87,29 @@ def crop_nonzero(arr):
     center = center.astype(int)
     cropped_arr = arr[center[0]-half_height:center[0]+half_height,
                       center[1]-half_width:center[1]+half_width]
-
-    return cropped_arr
-
-def padding(array, xx, yy):
-    """
-    :param array: numpy array
-    :param xx: desired height
-    :param yy: desirex width
-    :return: padded array
-    """
-
-    h = array.shape[0]
-    w = array.shape[1]
-
-    a = (xx - h) // 2
-    aa = xx - a - h
-
-    b = (yy - w) // 2
-    bb = yy - b - w
-
-    return np.pad(array, pad_width=((a, aa), (b, bb)), mode='constant')
+    if include_index:
+        return cropped_arr, (center[0]-half_height, center[0]+half_height, center[1]-half_width, center[1]+half_width)
+    else:
+        return cropped_arr
 
 
 if __name__ == "__main__":
+    TESTING = False
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--process', type=str, default='uncrop',
+                        help='specify the process to be done. i.e, uncrop, crop, segment')
+    args = parser.parse_args()
+    process = args.process
+
+    X, y = load_data(input_dir, process=process, downsampling_factor=4) 
+    print(f"X shape: {X[0].shape}, Y shape: {y.shape}")
     #[[image1], [image2], [image3]] where images are 2d arrays with entries representing pixels of the image
     #[label1, label2, label3] where labels in {1., 2., 3.} representing class of tumor
-    X, y = load_data(input_dir, process='uncrop', downsampling_factor=4)
-    print(f"X shape: {X[2].shape}, Y shape: {y.shape}")
 
+    if TESTING:
+        visualize(X[0])
+    
     fig, axes = plt.subplots(nrows=3, ncols=5, figsize=(12, 6))
     axes = axes.flatten()
     for i in range(15):        
