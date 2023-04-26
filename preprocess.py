@@ -6,12 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import argparse
-
-
 from skimage.measure import block_reduce
 
-# specify the input directory containing .mat files
-input_dir = "data/set1"
 
 def load_data(input_dir, process="uncrop", downsampling_factor=1):
     """
@@ -94,22 +90,18 @@ def crop_nonzero(arr, include_index=False):
 
 
 if __name__ == "__main__":
-    TESTING = False
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--process', type=str, default='uncrop',
-                        help='specify the process to be done. i.e, uncrop, crop, segment')
+    parser.add_argument('--process', type=str, default='uncrop', help='specify the process to be done. i.e, uncrop, crop, segment')
+    parser.add_argument('--input_path', type=str, default='data/set1', help='directory of input data')
     args = parser.parse_args()
+
     process = args.process
+    input_dir = args.input_path
 
     X, y = load_data(input_dir, process=process, downsampling_factor=4) 
     print(f"X shape: {X[0].shape}, Y shape: {y.shape}")
-    #[[image1], [image2], [image3]] where images are 2d arrays with entries representing pixels of the image
-    #[label1, label2, label3] where labels in {1., 2., 3.} representing class of tumor
 
-    if TESTING:
-        visualize(X[0])
-    
     fig, axes = plt.subplots(nrows=3, ncols=5, figsize=(12, 6))
     axes = axes.flatten()
     for i in range(15):        
