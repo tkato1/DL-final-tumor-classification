@@ -3,4 +3,6 @@ dependencies:
   - numpy
   - tensorflow
   - keras
-  - imageio
+  - cv2
+  - scikit-image
+  - matplotlib
