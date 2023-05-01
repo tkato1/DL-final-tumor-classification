@@ -14,7 +14,6 @@ import math
 # ensures that we run only on cpu
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-
 def main():
     '''
     Read in MRI data of 3 classes, initialize model, and train and 
@@ -61,7 +60,6 @@ def main():
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
     model.fit(train_inputs, train_labels, epochs=20, batch_size=64, validation_data=(test_inputs, test_labels))
-
 
 if __name__ == '__main__':
     main()
