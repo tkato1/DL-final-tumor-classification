@@ -12,16 +12,16 @@ import math
 # ensures that we run only on cpu
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-class Model(tf.keras.Model):
+class ClassifierModel(tf.keras.Model):
     def __init__(self):
         """
         This model class will contain the architecture for your CNN that 
         classifies images. We have left in variables in the constructor
         for you to fill out, but you are welcome to change them if you'd like.
         """
-        super(Model, self).__init__()
+        super(ClassifierModel, self).__init__()
 
-        self.batch_size = 64
+        self.batch_size = 32
         self.num_classes = 3
         self.loss_list = [] # Append losses to this list in training so you can visualize loss vs time in main
 
@@ -29,7 +29,7 @@ class Model(tf.keras.Model):
         # TODO: Initialize all trainable parameters
         #convolutional layer 1
         # 5 x 5 filters that operate on 3 channels and and output 16 filters
-        self.layers = Sequential([
+        self.classifier_layers = Sequential([
             tf.keras.layers.Conv2D(32, 1, activation="relu"),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU(),
@@ -45,11 +45,13 @@ class Model(tf.keras.Model):
             tf.keras.layers.Conv2D(16, 1, activation="relu"),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.ReLU(),
+            tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(2, activation="softmax"),
             tf.keras.layers.Dense(3)
         ])
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
-    def call(self, inputs, is_testing=False):
+    def call(self, inputs):
         """
         Runs a forward pass on an input batch of images.
         
@@ -57,7 +59,7 @@ class Model(tf.keras.Model):
         :param is_testing: a boolean that should be set to True only when you're doing Part 2 of the assignment and this function is being called during testing
         :return: logits - a matrix of shape (num_inputs, num_classes); during training, it would be (batch_size, 2)
         """
-        pass
+        return self.classifier_layers(inputs)
 
 
     def loss(self, logits, labels):
@@ -70,8 +72,7 @@ class Model(tf.keras.Model):
         :param labels: during training, matrix of shape (batch_size, self.num_classes) containing the train labels
         :return: the loss of the model as a Tensor
         """
-        pass
-        # return tf.math.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels, logits))
+        return tf.math.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels, logits))
 
     def accuracy(self, logits, labels):
         """
@@ -81,11 +82,18 @@ class Model(tf.keras.Model):
         :param logits: a matrix of size (num_inputs, self.num_classes); during training, this will be (batch_size, self.num_classes)
         containing the result of multiple convolution and feed forward layers
         :param labels: matrix of size (num_labels, self.num_classes) containing the answers, during training, this will be (batch_size, self.num_classes)
-
-        NOTE: DO NOT EDIT
-        
         :return: the accuracy of the model as a Tensor
+
+        the paper defined the accuracy as the folllowing with true positive (TP), false positive (FP), false negative (FN), and true negative
+                  TP + TN
+            -------------------
+             TP + FP + TN + FN
+(TN) 
         """
+        # tp = correct_predictions = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
+        # fp = correct_predictions = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 0))
+        # fn = correct_predictions = tf.equal(tf.argmax(logits, 0), tf.argmax(labels, 1))
+        # tn = correct_predictions = tf.equal(tf.argmax(logits, 0), tf.argmax(labels, 0))
         correct_predictions = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
         return tf.reduce_mean(tf.cast(correct_predictions, tf.float32))
 
@@ -117,8 +125,9 @@ def train(model, train_inputs, train_labels):
         inputs = training_inputs[batch:batch_end]
         labels = training_labels[batch:batch_end]
         with tf.GradientTape() as tape:
-            output = model.call(tf.image.random_flip_left_right (inputs), is_testing=False)
+            output = model.call(tf.image.random_flip_left_right(inputs))
             loss = model.loss(output, labels)
+            print("loss is", loss)
             grads = tape.gradient(loss, model.trainable_variables)
             model.optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
@@ -136,7 +145,7 @@ def test(model, test_inputs, test_labels):
     all batches
     """
 
-    result = model.call(test_inputs, is_testing=True)
+    result = model.call(test_inputs)
     return model.accuracy(result, test_labels)
 
 
@@ -222,9 +231,18 @@ def main():
     :return: None
     '''
 
-    train_inputs, train_labels = load_data("data/set1", downsampling_factor=4) 
-    test_inputs, test_labels = load_data("data/set2", downsampling_factor=4) 
-    model = Model()
+    inputs, labels = load_data("data/set1", downsampling_factor=4)
+    train_inputs = np.array([np.array(val) for val in inputs])[:600]
+    train_inputs = train_inputs.reshape(-1, 1, 128, 128)
+    train_inputs = train_inputs.transpose(0, 2, 3, 1)
+    train_labels = labels[:600]
+    print(np.shape(train_inputs))
+    print(np.shape(train_labels))
+    test_inputs = np.array([np.array(val) for val in inputs])[600:]
+    test_labels = labels[600:]
+
+
+    model = ClassifierModel()
     for i in range(10):
         train(model, train_inputs, train_labels)
         print("epoch", i + 1, "testing result:", test(model, test_inputs, test_labels).numpy())

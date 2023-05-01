@@ -5,6 +5,7 @@ import cv2
 import mat73
 import numpy as np
 import matplotlib.pyplot as plt
+import tensorflow as tf
 
 from skimage.measure import block_reduce
 
@@ -39,8 +40,8 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1):
 
             downsampled_image = downsample(image_data, factor=downsampling_factor) #downsampling image
 
-            plt.imshow(image_data, cmap="gray")
-            plt.savefig("jpegs/set1/image" + str(i) + ".jpg")
+            # plt.imshow(image_data, cmap="gray")
+            # plt.savefig("jpegs/set1/image" + str(i) + ".jpg")
 
             with open('set1_labels.txt', 'w') as f:
                 f.write('This is some text.')
@@ -52,7 +53,7 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1):
     # inputs = X / 255
     # inputs = tf.reshape(inputs, (-1, 8, 16 ,16))
     # inputs = tf.transpose(inputs, perm=[0,2,3,1])
-    # y = tf.one_hot(y, 3)
+    y = tf.one_hot(y, 3)
     # print(y)
     # return inputs, y
     return X, y
