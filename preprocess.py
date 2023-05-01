@@ -26,6 +26,8 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1):
         if filename.endswith('.mat'): # load the .mat file using scipy.io.loadmat()
             data = mat73.loadmat(os.path.join(input_dir, filename))['cjdata'] #dict_keys(['PID', 'image', 'label', 'tumorBorder', 'tumorMask'])
             image_data = np.asarray(data['image'].astype('uint8'))
+            if (np.shape(image_data) != (512, 512)):
+                print(filename)
             if process == "segment":
                 masked_image = np.where(data['tumorMask'], image_data, 0) #masking image with tumorMask
                 cropped_image = crop_nonzero(masked_image) #cropped it
@@ -47,15 +49,18 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1):
                 f.write('This is some text.')
 
             X[i] = downsampled_image
-            y[i] = data['label']
+            y[i] = data['label'] - 1
+
+    
             
 
     # inputs = X / 255
     # inputs = tf.reshape(inputs, (-1, 8, 16 ,16))
     # inputs = tf.transpose(inputs, perm=[0,2,3,1])
-    y = tf.one_hot(y, 3)
+    # y = tf.one_hot(y, 3)
     # print(y)
     # return inputs, y
+    print(np.shape(X))
     return X, y
 
 
