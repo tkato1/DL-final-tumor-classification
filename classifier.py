@@ -49,7 +49,7 @@ class ClassifierModel(tf.keras.Model):
             tf.keras.layers.Dense(2, activation="softmax"),
             tf.keras.layers.Dense(3)
         ])
-        self.optimizer = tf.keras.optimizers.SGD(learning_rate=0.03)
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
     def call(self, inputs):
         """
@@ -83,7 +83,6 @@ class ClassifierModel(tf.keras.Model):
         containing the result of multiple convolution and feed forward layers
         :param labels: matrix of size (num_labels, self.num_classes) containing the answers, during training, this will be (batch_size, self.num_classes)
         :return: the accuracy of the model as a Tensor
-
         the paper defined the accuracy as the folllowing with true positive (TP), false positive (FP), false negative (FN), and true negative
                   TP + TN
             -------------------
@@ -127,6 +126,7 @@ def train(model, train_inputs, train_labels):
         with tf.GradientTape() as tape:
             output = model.call(tf.image.random_flip_left_right(inputs))
             loss = model.loss(output, labels)
+            print("loss is", loss)
             grads = tape.gradient(loss, model.trainable_variables)
             model.optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
@@ -153,9 +153,7 @@ def visualize_loss(losses):
     Uses Matplotlib to visualize the losses of our model.
     :param losses: list of loss data stored from train. Can use the model's loss_list 
     field 
-
     NOTE: DO NOT EDIT
-
     :return: doesn't return anything, a plot should pop-up 
     """
     x = [i for i in range(len(losses))]
@@ -174,9 +172,7 @@ def visualize_results(image_inputs, probabilities, image_labels, first_label, se
     :param image_labels: the labels from get_data(), shape (50, num_classes)
     :param first_label: the name of the first class, "cat"
     :param second_label: the name of the second class, "dog"
-
     NOTE: DO NOT EDIT
-
     :return: doesn't return anything, two plots should pop-up, one for correct results,
     one for incorrect results
     """
@@ -235,6 +231,8 @@ def main():
     train_inputs = train_inputs.reshape(-1, 1, 128, 128)
     train_inputs = train_inputs.transpose(0, 2, 3, 1)
     train_labels = labels[:600]
+    print(np.shape(train_inputs))
+    print(np.shape(train_labels))
     test_inputs = np.array([np.array(val) for val in inputs])[600:]
     test_labels = labels[600:]
 
