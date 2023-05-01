@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from matplotlib import pyplot as plt
 from preprocess import load_data
+from tensorflow.keras import Sequential
 
 import os
 import tensorflow as tf
@@ -28,28 +29,25 @@ class Model(tf.keras.Model):
         # TODO: Initialize all trainable parameters
         #convolutional layer 1
         # 5 x 5 filters that operate on 3 channels and and output 16 filters
-        self.conv_filter_1 = tf.Variable(tf.random.truncated_normal([5,5,3,16], stddev=0.1), dtype=tf.float32)
-        self.conv_bias_1 = tf.Variable(tf.zeros([16]))
-        # convolutional layer 2
-        # no more rbg, now channels is for each filter /feature
-        self.conv_filter_2 = tf.Variable(tf.random.truncated_normal([5,5,16,20], stddev=0.1), dtype=tf.float32) 
-        self.conv_bias_2 = tf.Variable(tf.zeros([20]))
-        # convolutional layer 3
-        self.conv_filter_3 = tf.Variable(tf.random.truncated_normal([5,5,20,20], stddev=0.1), dtype=tf.float32)
-        self.conv_bias_3 = tf.Variable(tf.zeros([20]))
-        # dense layer 1
-        self.dl1_weights = tf.Variable(tf.random.truncated_normal([80, 60], stddev=0.1))
-        self.dl1_bias = tf.Variable(tf.zeros([60]))
-        # dense layer 2
-        self.dl2_weights = tf.Variable(tf.random.truncated_normal([60, 30], stddev=0.1))
-        self.dl2_bias = tf.Variable(tf.zeros([30]))
-        # dense layer 3
-        self.dl3_weights = tf.Variable(tf.random.truncated_normal([30, 3], stddev=0.1))
-        self.dl3_bias = tf.Variable(tf.zeros([3]))
-
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-
-        self.flatten = tf.keras.layers.Flatten()
+        self.layers = Sequential([
+            tf.keras.layers.Conv2D(32, 1, activation="relu"),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.ReLU(),
+            tf.keras.layers.MaxPool2D(),
+            tf.keras.layers.Conv2D(16, 1, activation="relu"),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.ReLU(),
+            tf.keras.layers.MaxPool2D(),
+            tf.keras.layers.Conv2D(8, 1, activation="relu"),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.ReLU(),
+            tf.keras.layers.MaxPool2D(),
+            tf.keras.layers.Conv2D(16, 1, activation="relu"),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.ReLU(),
+            tf.keras.layers.Dense(2, activation="softmax"),
+            tf.keras.layers.Dense(3)
+        ])
 
     def call(self, inputs, is_testing=False):
         """
@@ -59,58 +57,7 @@ class Model(tf.keras.Model):
         :param is_testing: a boolean that should be set to True only when you're doing Part 2 of the assignment and this function is being called during testing
         :return: logits - a matrix of shape (num_inputs, num_classes); during training, it would be (batch_size, 2)
         """
-        # Remember that
-        # shape of input = (num_inputs (or batch_size), in_height, in_width, in_channels)
-        # shape of filter = (filter_height, filter_width, in_channels, out_channels)
-        # shape of strides = (batch_stride, height_stride, width_stride, channels_stride)
-        inputs = tf.cast(inputs, tf.float32)
-        
-        # Convolution Layer 1
-        conv_layer_1 = tf.nn.conv2d(inputs, filters=self.conv_filter_1, strides=2, padding="SAME") # should stride be (batch_stride, height_stride, width_stride, channels_stride)?
-        conv_layer_1 = tf.nn.bias_add(conv_layer_1, self.conv_bias_1)
-        # Batch Normalization 1
-        mean, variance = tf.nn.moments(conv_layer_1, axes=[0, 1, 2])
-        batch_norm_1 = tf.nn.batch_normalization(conv_layer_1, mean, variance, None, None, 0.00001)
-        # ReLU 1
-        relu1 = tf.nn.relu(batch_norm_1)
-        # Max Pooling 1
-        max_pool_1 = tf.nn.max_pool(relu1, ksize=3, strides=2, padding="SAME")
-
-        # Convolution Layer 2
-        conv_layer_2 = tf.nn.conv2d(max_pool_1, filters=self.conv_filter_2, strides=2, padding="SAME")
-        conv_layer_2 = tf.nn.bias_add(conv_layer_2, self.conv_bias_2)
-        # Batch Normalization 2
-        mean_2, variance_2 = tf.nn.moments(conv_layer_2, axes=[0, 1, 2])
-        batch_norm_2 = tf.nn.batch_normalization(conv_layer_2, mean_2, variance_2, None, None, 0.00001)
-        # ReLU 2
-        relu2 = tf.nn.relu(batch_norm_2)
-        # Max Pooling 3
-        max_pool_2 = tf.nn.max_pool(relu2, ksize=2, strides=2, padding="SAME")
-
-        #Convolution Layer 3
-        if is_testing:
-            conv_layer_3 = conv2d(inputs=max_pool_2, filters=self.conv_filter_3, strides=[1,1,1,1], padding="SAME")
-        else:
-            conv_layer_3 = tf.nn.conv2d(max_pool_2, filters=self.conv_filter_3, strides=1, padding="SAME") 
-        conv_layer_3 = tf.nn.bias_add(conv_layer_3, self.conv_bias_3)
-        # Batch Normalization 3
-        mean_3, variance_3 = tf.nn.moments(conv_layer_3, axes=[0, 1, 2])
-        batch_norm_3 = tf.nn.batch_normalization(conv_layer_3, mean_3, variance_3, None, None, 0.00001)
-        # ReLU 3
-        relu3 = tf.nn.relu(batch_norm_3)
-
-        # Flatten
-        flattened = self.flatten(relu3)
-
-        # Dense Layer 1 + Dropout Layer
-        dense_layer_1 = tf.matmul(flattened, self.dl1_weights) + self.dl1_bias
-        dropout_layer_1 = tf.nn.dropout(dense_layer_1, 0.3)
-        # Dense Layer 2 + Dropout Layer
-        dense_layer_2 = tf.matmul(dropout_layer_1, self.dl2_weights) + self.dl2_bias
-        dropout_layer_2 = tf.nn.dropout(dense_layer_2, 0.3)
-        # Dense Layer 3
-        dense_layer_3 = tf.matmul(dropout_layer_2, self.dl3_weights) + self.dl3_bias
-        return dense_layer_3
+        pass
 
 
     def loss(self, logits, labels):
@@ -123,8 +70,8 @@ class Model(tf.keras.Model):
         :param labels: during training, matrix of shape (batch_size, self.num_classes) containing the train labels
         :return: the loss of the model as a Tensor
         """
-
-        return tf.math.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels, logits))
+        pass
+        # return tf.math.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels, logits))
 
     def accuracy(self, logits, labels):
         """
