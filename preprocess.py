@@ -1,11 +1,11 @@
+import argparse
 import os
-import scipy.io
-import imageio
+
+import cv2
 import mat73
 import numpy as np
 import matplotlib.pyplot as plt
-import cv2
-import argparse
+
 from skimage.measure import block_reduce
 import tensorflow as tf
 
