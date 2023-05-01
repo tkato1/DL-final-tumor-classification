@@ -58,6 +58,7 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, o
                 with open('labels/labels.txt', 'a') as f:
                     f.write(str(data['label']))
 
+    print(np.shape(X))
     X = np.stack(X, axis=0)
     y = np.reshape(y, (-1,1))
 
