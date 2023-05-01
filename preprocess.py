@@ -10,10 +10,12 @@ import tensorflow as tf
 from skimage.measure import block_reduce
 
 
-def load_data(input_dir, process="uncrop", downsampling_factor=1):
+def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, output_dir="", save_labels=False):
     """
     input_dir: directory of raw .mat files
     process: the modification to the image(uncrop, crop, segment)
+    jpegs: if you want to save the data as a jpeg in the output_dir
+    save_labels: if you want to save the labels of each image in the labels.txt file
     """
     raw_images = os.listdir(input_dir)
     number_images = len(raw_images)
@@ -26,10 +28,15 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1):
         if filename.endswith('.mat'): # load the .mat file using scipy.io.loadmat()
             data = mat73.loadmat(os.path.join(input_dir, filename))['cjdata'] #dict_keys(['PID', 'image', 'label', 'tumorBorder', 'tumorMask'])
             image_data = np.asarray(data['image'].astype('uint8'))
+
+            if (np.shape(image_data) != (512, 512)):
+                image_data = cv2.resize(image_data, (512,512), interpolation=cv2.INTER_AREA)
+                
             if process == "segment":
                 masked_image = np.where(data['tumorMask'], image_data, 0) #masking image with tumorMask
                 cropped_image = crop_nonzero(masked_image) #cropped it
                 image_data = cv2.resize(cropped_image, (512,512), interpolation=cv2.INTER_AREA) #scaled to 512x512
+                
             if process == "crop":
                 masked_image = np.where(data['tumorMask'], image_data, 0) #this is only to retrieve the crop indices
                 cropped_masked_image, indices = crop_nonzero(masked_image, include_index=True) #cropped it
@@ -40,24 +47,21 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1):
 
             downsampled_image = downsample(image_data, factor=downsampling_factor) #downsampling image
 
-            # plt.imshow(image_data, cmap="gray")
-            # plt.savefig("jpegs/set1/image" + str(i) + ".jpg")
+            if jpegs:
+                plt.imshow(downsampled_image, cmap="gray")
+                plt.savefig(output_dir + "image" + str(i) + ".jpg")
+            else:
+                X[i] = downsampled_image
+                y[i] = data['label']
 
-            with open('set1_labels.txt', 'w') as f:
-                f.write('This is some text.')
+            if save_labels:
+                with open('labels/labels.txt', 'a') as f:
+                    f.write(str(data['label']))
 
-            X[i] = downsampled_image
-            y[i] = data['label']
-            
+    X = np.stack(X, axis=0)
+    y = np.reshape(y, (-1,1))
 
-    # inputs = X / 255
-    # inputs = tf.reshape(inputs, (-1, 8, 16 ,16))
-    # inputs = tf.transpose(inputs, perm=[0,2,3,1])
-    y = tf.one_hot(y, 3)
-    # print(y)
-    # return inputs, y
     return X, y
-
 
 def downsample(image, factor=1):
     """
@@ -108,18 +112,20 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--process', type=str, default='uncrop', help='specify the process to be done. i.e, uncrop, crop, segment')
-    parser.add_argument('--input_path', type=str, default='data/set1', help='directory of input data')
+    parser.add_argument('--input_path', type=str, default="data/set1", help='directory of input data')
+    parser.add_argument('--output_path', type=str, default="jpegs/uncropped32/", help='directory of output data')
     args = parser.parse_args()
 
     process = args.process
     input_dir = args.input_path
+    output_dir = args.output_path
 
-    X, y = load_data(input_dir, process=process, downsampling_factor=4) 
-    print(f"X shape: {X[0].shape}, Y shape: {y.shape}")
+    X, y = load_data(input_dir, process=process, downsampling_factor=8, output_dir=output_dir) 
+    print(f"X shape: {X.shape}, Y shape: {y.shape}")
 
-    fig, axes = plt.subplots(nrows=3, ncols=5, figsize=(12, 6))
+    fig, axes = plt.subplots(nrows=2, ncols=5, figsize=(12, 6))
     axes = axes.flatten()
-    for i in range(15):        
+    for i in range(10):        
         axes[i].imshow(X[i], cmap="gray")
 
     for ax in axes:
