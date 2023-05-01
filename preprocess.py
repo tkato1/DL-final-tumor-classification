@@ -10,7 +10,7 @@ import tensorflow as tf
 from skimage.measure import block_reduce
 
 
-def load_data(input_dir, output_dir, process="uncrop", downsampling_factor=1, jpegs=False, save_labels=False):
+def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, output_dir="", save_labels=False):
     """
     input_dir: directory of raw .mat files
     process: the modification to the image(uncrop, crop, segment)
@@ -28,12 +28,15 @@ def load_data(input_dir, output_dir, process="uncrop", downsampling_factor=1, jp
         if filename.endswith('.mat'): # load the .mat file using scipy.io.loadmat()
             data = mat73.loadmat(os.path.join(input_dir, filename))['cjdata'] #dict_keys(['PID', 'image', 'label', 'tumorBorder', 'tumorMask'])
             image_data = np.asarray(data['image'].astype('uint8'))
+
             if (np.shape(image_data) != (512, 512)):
-                print(filename)
+                image_data = cv2.resize(image_data, (512,512), interpolation=cv2.INTER_AREA)
+                
             if process == "segment":
                 masked_image = np.where(data['tumorMask'], image_data, 0) #masking image with tumorMask
                 cropped_image = crop_nonzero(masked_image) #cropped it
                 image_data = cv2.resize(cropped_image, (512,512), interpolation=cv2.INTER_AREA) #scaled to 512x512
+                
             if process == "crop":
                 masked_image = np.where(data['tumorMask'], image_data, 0) #this is only to retrieve the crop indices
                 cropped_masked_image, indices = crop_nonzero(masked_image, include_index=True) #cropped it
@@ -117,7 +120,7 @@ if __name__ == "__main__":
     input_dir = args.input_path
     output_dir = args.output_path
 
-    X, y = load_data(input_dir, output_dir, process=process, downsampling_factor=8) 
+    X, y = load_data(input_dir, process=process, downsampling_factor=8, output_dir=output_dir) 
     print(f"X shape: {X.shape}, Y shape: {y.shape}")
 
     fig, axes = plt.subplots(nrows=2, ncols=5, figsize=(12, 6))

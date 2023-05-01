@@ -18,23 +18,30 @@ def main():
     '''
     Read in MRI data of 3 classes, initialize model, and train and 
     test  model for a number of epochs.
-    
-    :return: None
     '''
 
-    inputs, labels = load_data("data/set1", downsampling_factor=4)
-    inputs_1, labels_1 = load_data("data/set2", downsampling_factor=4)
-    # print(np.shape(inputs_1))
-    inputs = np.concatenate([inputs, inputs_1])
-    labels = np.concatenate([labels, labels_1])
-    train_inputs = np.array([np.array(val) for val in inputs])[:1200]
+    X, y = load_data("data/set1", downsampling_factor=4)
+    X = tf.convert_to_tensor(X, dtype=tf.float32)
+    y = tf.convert_to_tensor(y, dtype=tf.int32)
+    y = tf.one_hot(y, 3, dtype=tf.float32)
+    y = tf.reshape(y, (y.shape[0], y.shape[2]))
+
+    train_inputs = np.array([np.array(val) for val in X])[:2500]
+    # print("before reshaping 1")
+    # print(train_inputs.shape, train_labels.shape, test_inputs.shape, test_labels.shape)
     train_inputs = train_inputs.reshape(-1, 1, 128, 128)
     train_inputs = train_inputs.transpose(0, 2, 3, 1)
-    train_labels = labels[:1200]
-    test_inputs = np.array([np.array(val) for val in inputs])[1200:]
+    train_labels = y[:2500]
+
+    test_inputs = np.array([np.array(val) for val in X])[2500:]
     test_inputs = test_inputs.reshape(-1, 1, 128, 128)
+    # print("before reshaping 2")
+    # print(train_inputs.shape, train_labels.shape, test_inputs.shape, test_labels.shape)
     test_inputs = test_inputs.transpose(0, 2, 3, 1)
-    test_labels = labels[1200:]
+    test_labels = y[2500:]
+
+    # print("final")
+    # print(train_inputs.shape, train_labels.shape, test_inputs.shape, test_labels.shape)
 
     model = Sequential()
     model.add(tf.keras.layers.Conv2D(32, 1, activation="relu"))
@@ -55,11 +62,16 @@ def main():
     model.add(tf.keras.layers.Flatten())
     model.add(tf.keras.layers.Dense(2, activation="softmax"))
     model.add(tf.keras.layers.Dense(3))
-    opt = SGD(learning_rate=0.03)
-    model.compile(optimizer=opt,
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
-    model.fit(train_inputs, train_labels, epochs=20, batch_size=64, validation_data=(test_inputs, test_labels))
+
+    optimizer = tf.keras.optimizers.Adam(learning_rate = 0.001)
+    loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
+    metrics = ["accuracy"]     
+
+    model.compile(optimizer=optimizer,
+              loss=loss,
+              metrics=metrics)
+    
+    model.fit(train_inputs, train_labels, epochs=20, batch_size=32, validation_data=(test_inputs, test_labels))
 
 if __name__ == '__main__':
     main()
