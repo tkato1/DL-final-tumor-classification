@@ -17,15 +17,8 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 def main():
     '''
-    Read in CIFAR10 data (limited to 2 classes), initialize your model, and train and 
-    test your model for a number of epochs. We recommend that you train for
-    10 epochs and at most 25 epochs. 
-    
-    CS1470 students should receive a final accuracy 
-    on the testing examples for cat and dog of >=70%.
-    
-    CS2470 students should receive a final accuracy 
-    on the testing examples for cat and dog of >=75%.
+    Read in MRI data of 3 classes, initialize model, and train and 
+    test  model for a number of epochs.
     
     :return: None
     '''
