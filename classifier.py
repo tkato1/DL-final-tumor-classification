@@ -49,7 +49,7 @@ class ClassifierModel(tf.keras.Model):
             tf.keras.layers.Dense(2, activation="softmax"),
             tf.keras.layers.Dense(3)
         ])
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+        self.optimizer = tf.keras.optimizers.SGD(learning_rate=0.03)
 
     def call(self, inputs):
         """
