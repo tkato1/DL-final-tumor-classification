@@ -127,7 +127,6 @@ def train(model, train_inputs, train_labels):
         with tf.GradientTape() as tape:
             output = model.call(tf.image.random_flip_left_right(inputs))
             loss = model.loss(output, labels)
-            print("loss is", loss)
             grads = tape.gradient(loss, model.trainable_variables)
             model.optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
@@ -236,8 +235,6 @@ def main():
     train_inputs = train_inputs.reshape(-1, 1, 128, 128)
     train_inputs = train_inputs.transpose(0, 2, 3, 1)
     train_labels = labels[:600]
-    print(np.shape(train_inputs))
-    print(np.shape(train_labels))
     test_inputs = np.array([np.array(val) for val in inputs])[600:]
     test_labels = labels[600:]
 
