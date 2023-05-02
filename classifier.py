@@ -48,6 +48,10 @@ def main():
     test_inputs = test_inputs.transpose(0, 2, 3, 1)
     test_labels = y_not_one_hot[2582:]
 
+    inputs = np.array([np.array(val) for val in X])
+    inputs = inputs.reshape(-1, 1, 128, 128)
+    inputs = inputs.transpose(0, 2, 3, 1)
+
 
     # print("final")
     # print(train_inputs.shape, train_labels.shape, test_inputs.shape, test_labels.shape)
@@ -74,7 +78,7 @@ def main():
 
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-    loss = tf.keras.losses.CategoricalCrossentropy(from_logits=False)
+    loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
     metrics = ["accuracy"]
 
     model.compile(optimizer=optimizer,
@@ -88,8 +92,8 @@ def main():
     preds = np.argmax(model.predict(test_inputs), axis=1)
     print(tf.math.confusion_matrix(test_labels, preds, num_classes=3))
 
-    
-    # print(tf.math.confusion_matrix(test_labels, tf.one_hot(np.argmax(model.predict(test_inputs), axis=1), 3, dtype=tf.float32)))
+    pred_2 = np.argmax(model.predict(inputs), axis=1)
+    print(tf.math.confusion_matrix(y_not_one_hot, pred_2, num_classes=3))
 
 
 if __name__ == '__main__':
