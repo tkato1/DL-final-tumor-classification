@@ -22,6 +22,11 @@ def main():
     '''
 
     X, y = load_data("data/set1", downsampling_factor=4)
+    X2, y2 = load_data("data/set2", downsampling_factor=4)
+    X3, y3 = load_data("data/set3", downsampling_factor=4)
+    X4, y4 = load_data("data/set4", downsampling_factor=4)
+    X = np.concatenate([X, X2, X3, X4])
+    y = np.concatenate([y, y2, y3, y4])
     X = tf.convert_to_tensor(X, dtype=tf.float32)
     y = tf.convert_to_tensor(y, dtype=tf.int32)
     y = tf.one_hot(y, 3, dtype=tf.float32)
@@ -45,11 +50,11 @@ def main():
     # print(train_inputs.shape, train_labels.shape, test_inputs.shape, test_labels.shape)
 
     model = Sequential()
-    model.add(tf.keras.layers.Conv2D(32, 1, activation="relu"))
+    model.add(tf.keras.layers.Conv2D(32, 3, activation="relu"))
     model.add(tf.keras.layers.BatchNormalization())
     model.add(tf.keras.layers.ReLU())
     model.add(tf.keras.layers.MaxPool2D())
-    model.add(tf.keras.layers.Conv2D(16, 1, activation="relu"))
+    model.add(tf.keras.layers.Conv2D(16, 2, activation="relu"))
     model.add(tf.keras.layers.BatchNormalization())
     model.add(tf.keras.layers.ReLU())
     model.add(tf.keras.layers.MaxPool2D())
@@ -61,7 +66,8 @@ def main():
     model.add(tf.keras.layers.BatchNormalization())
     model.add(tf.keras.layers.ReLU())
     model.add(tf.keras.layers.Flatten())
-    model.add(tf.keras.layers.Dense(2, activation="softmax"))
+    model.add(tf.keras.layers.Dense(2))
+    model.add(tf.keras.layers.Softmax())
     model.add(tf.keras.layers.Dense(3))
 
     optimizer = tf.keras.optimizers.Adam(learning_rate = 0.001)
@@ -72,7 +78,7 @@ def main():
               loss=loss,
               metrics=metrics)
     
-    model.fit(train_inputs, train_labels, epochs=20, batch_size=32, validation_data=(test_inputs, test_labels))
+    model.fit(train_inputs, train_labels, epochs=20, batch_size=64, validation_data=(test_inputs, test_labels))
 
 if __name__ == '__main__':
     main()

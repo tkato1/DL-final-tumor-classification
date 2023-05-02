@@ -17,7 +17,8 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, o
     jpegs: if you want to save the data as a jpeg in the output_dir
     save_labels: if you want to save the labels of each image in the labels.txt file
     """
-    raw_images = os.listdir(input_dir)
+    # raw_images = os.listdir(input_dir)
+    raw_images = [f for f in os.listdir(input_dir) if not f.startswith('.')]
     number_images = len(raw_images)
 
     #pre-initialization
@@ -51,14 +52,19 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, o
                 plt.imshow(downsampled_image, cmap="gray")
                 plt.savefig(output_dir + "image" + str(i) + ".jpg")
             else:
-                X[i] = downsampled_image
+                X[i] = downsampled_image / 255
+                # print(filename, i)
                 y[i] = data['label']
 
             if save_labels:
                 with open('labels/labels.txt', 'a') as f:
                     f.write(str(data['label']))
+        else:
+            print(filename, i)
 
-    print(np.shape(X))
+
+    # for i in range(756):
+    #     print(i, np.shape(X[i]))
     X = np.stack(X, axis=0)
     y = np.reshape(y, (-1,1))
 
