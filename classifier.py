@@ -32,19 +32,21 @@ def main():
     y = tf.one_hot(y, 3, dtype=tf.float32)
     y = tf.reshape(y, (y.shape[0], y.shape[2]))
 
-    train_inputs = np.array([np.array(val) for val in X])[:2500]
-    # print("before reshaping 1")
-    # print(train_inputs.shape, train_labels.shape, test_inputs.shape, test_labels.shape)
+    train_inputs = np.array([np.array(val) for val in X])[:2100]
     train_inputs = train_inputs.reshape(-1, 1, 128, 128)
     train_inputs = train_inputs.transpose(0, 2, 3, 1)
-    train_labels = y[:2500]
+    train_labels = y[:2100]
 
-    test_inputs = np.array([np.array(val) for val in X])[2500:]
+    validation_inputs = np.array([np.array(val) for val in X])[2100:2582]
+    validation_inputs = validation_inputs.reshape(-1, 1, 128, 128)
+    validation_inputs = validation_inputs.transpose(0, 2, 3, 1)
+    validation_labels = y[2100:2582]
+
+    test_inputs = np.array([np.array(val) for val in X])[2582:]
     test_inputs = test_inputs.reshape(-1, 1, 128, 128)
-    # print("before reshaping 2")
-    # print(train_inputs.shape, train_labels.shape, test_inputs.shape, test_labels.shape)
     test_inputs = test_inputs.transpose(0, 2, 3, 1)
-    test_labels = y[2500:]
+    test_labels = y[2582:]
+
 
     # print("final")
     # print(train_inputs.shape, train_labels.shape, test_inputs.shape, test_labels.shape)
@@ -77,8 +79,14 @@ def main():
     model.compile(optimizer=optimizer,
               loss=loss,
               metrics=metrics)
+
     
-    model.fit(train_inputs, train_labels, epochs=20, batch_size=64, validation_data=(test_inputs, test_labels))
+    model.fit(train_inputs, train_labels, epochs=20, batch_size=64, validation_data=(validation_inputs, validation_labels))
+
+    model.summary()
+    
+    #testing 
+    print(tf.math.confusion_matrix(test_labels, model.predict(test_inputs), num_classes=3))
 
 if __name__ == '__main__':
     main()
