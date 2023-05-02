@@ -22,11 +22,6 @@ def main():
     '''
 
     X, y = load_data("data/set1", downsampling_factor=4)
-    X2, y2 = load_data("data/set2", downsampling_factor=4)
-    X3, y3 = load_data("data/set3", downsampling_factor=4)
-    X4, y4 = load_data("data/set4", downsampling_factor=4)
-    X = np.concatenate([X, X2, X3, X4])
-    y = np.concatenate([y, y2, y3, y4])
     X = tf.convert_to_tensor(X, dtype=tf.float32)
     y = tf.convert_to_tensor(y, dtype=tf.int32)
     y_not_one_hot = y
@@ -76,7 +71,6 @@ def main():
     model.add(tf.keras.layers.Dense(5, activation="softmax"))
     model.add(tf.keras.layers.Dense(3))
 
-
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
     loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
     metrics = ["accuracy"]
@@ -85,15 +79,41 @@ def main():
                   loss=loss,
                   metrics=metrics)
 
-    model.fit(train_inputs, train_labels, epochs=50, batch_size=64,
-              validation_data=(validation_inputs, validation_labels))
+    # model.fit(train_inputs, train_labels, epochs=50, batch_size=64,
+    #           validation_data=(validation_inputs, validation_labels))
 
     
-    preds = np.argmax(model.predict(test_inputs), axis=1)
-    print(tf.math.confusion_matrix(test_labels, preds, num_classes=3))
+    # preds = np.argmax(model.predict(test_inputs), axis=1)
+    # print(tf.math.confusion_matrix(test_labels, preds, num_classes=3))
 
-    pred_2 = np.argmax(model.predict(inputs), axis=1)
-    print(tf.math.confusion_matrix(y_not_one_hot, pred_2, num_classes=3))
+    # pred_2 = np.argmax(model.predict(inputs), axis=1)
+    # print(tf.math.confusion_matrix(y_not_one_hot, pred_2, num_classes=3))
+
+    model.fit(train_inputs, train_labels, epochs=5, batch_size=64,
+              validation_data=(validation_inputs, validation_labels))
+    y_prob = model.predict(test_inputs)
+    y_pred = np.argmax(y_prob, axis=1)
+    confusion = tf.math.confusion_matrix(
+        labels=test_labels, predictions=y_pred).numpy()
+    print("confusion matrix:\n", confusion)
+    num_classes = 3
+    accuracy = np.zeros(num_classes)
+    precision = np.zeros(num_classes)
+    specificity = np.zeros(num_classes)
+    sensitivity = np.zeros(num_classes)
+    for i in range(num_classes):
+        tp = confusion[i, i]
+        fp = np.sum(confusion[:, i]) - tp
+        fn = np.sum(confusion[i, :]) - tp
+        tn = tp - tp
+        for k in range(num_classes):
+            for j in range(num_classes):
+                if k != i and j != i:
+                    tn += confusion[k, j]
+        accuracy[i] = (tp + tn)/(tp + fp + tn + fn)
+        sensitivity[i] = (tp)/(tp + fn)
+        specificity[i] = (tn)/(tn + fp)
+        precision[i] = (tp)/(tp + fp)
 
 
 if __name__ == '__main__':
