@@ -22,11 +22,6 @@ def main():
     '''
 
     X, y = load_data("data/set1", downsampling_factor=4)
-    X2, y2 = load_data("data/set2", downsampling_factor=4)
-    X3, y3 = load_data("data/set3", downsampling_factor=4)
-    X4, y4 = load_data("data/set4", downsampling_factor=4)
-    X = np.concatenate([X, X2, X3, X4])
-    y = np.concatenate([y, y2, y3, y4])
     X = tf.convert_to_tensor(X, dtype=tf.float32)
     y = tf.convert_to_tensor(y, dtype=tf.int32)
     y_not_one_hot = y
@@ -47,6 +42,10 @@ def main():
     test_inputs = test_inputs.reshape(-1, 1, 128, 128)
     test_inputs = test_inputs.transpose(0, 2, 3, 1)
     test_labels = y_not_one_hot[2582:]
+
+    inputs = np.array([np.array(val) for val in X])
+    inputs = inputs.reshape(-1, 1, 128, 128)
+    inputs = inputs.transpose(0, 2, 3, 1)
 
     # print("final")
     # print(train_inputs.shape, train_labels.shape, test_inputs.shape, test_labels.shape)
@@ -79,8 +78,17 @@ def main():
                   loss=loss,
                   metrics=metrics)
 
-    model.fit(train_inputs, train_labels, epochs=1, batch_size=64,
-              validation_data=(test_inputs, test_labels))
+    # model.fit(train_inputs, train_labels, epochs=50, batch_size=64,
+    #           validation_data=(validation_inputs, validation_labels))
+
+    # preds = np.argmax(model.predict(test_inputs), axis=1)
+    # print(tf.math.confusion_matrix(test_labels, preds, num_classes=3))
+
+    # pred_2 = np.argmax(model.predict(inputs), axis=1)
+    # print(tf.math.confusion_matrix(y_not_one_hot, pred_2, num_classes=3))
+
+    model.fit(train_inputs, train_labels, epochs=5, batch_size=64,
+              validation_data=(validation_inputs, validation_labels))
     y_prob = model.predict(test_inputs)
     y_pred = np.argmax(y_prob, axis=1)
     confusion = tf.math.confusion_matrix(
@@ -104,13 +112,6 @@ def main():
         sensitivity[i] = (tp)/(tp + fn)
         specificity[i] = (tn)/(tn + fp)
         precision[i] = (tp)/(tp + fp)
-    model.fit(train_inputs, train_labels, epochs=50, batch_size=64,
-              validation_data=(validation_inputs, validation_labels))
-
-    # preds = np.argmax(model.predict(test_inputs), axis=1)
-    # print(tf.math.confusion_matrix(test_labels, preds, num_classes=3))
-
-    # print(tf.math.confusion_matrix(test_labels, tf.one_hot(np.argmax(model.predict(test_inputs), axis=1), 3, dtype=tf.float32)))
 
 
 if __name__ == '__main__':
