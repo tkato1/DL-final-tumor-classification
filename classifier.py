@@ -22,34 +22,41 @@ def main():
     '''
 
     X, y = load_data("data/set1", downsampling_factor=4)
+    X2, y2 = load_data("data/set2", downsampling_factor=4)
+    X3, y3 = load_data("data/set3", downsampling_factor=4)
+    X4, y4 = load_data("data/set4", downsampling_factor=4)
+    X = np.concatenate([X, X2, X3, X4])
+    y = np.concatenate([y, y2, y3, y4])
     X = tf.convert_to_tensor(X, dtype=tf.float32)
     y = tf.convert_to_tensor(y, dtype=tf.int32)
+    y_not_one_hot = y
     y = tf.one_hot(y, 3, dtype=tf.float32)
     y = tf.reshape(y, (y.shape[0], y.shape[2]))
 
-    train_inputs = np.array([np.array(val) for val in X])[:2500]
-    # print("before reshaping 1")
-    # print(train_inputs.shape, train_labels.shape, test_inputs.shape, test_labels.shape)
+    train_inputs = np.array([np.array(val) for val in X])[:2100]
     train_inputs = train_inputs.reshape(-1, 1, 128, 128)
     train_inputs = train_inputs.transpose(0, 2, 3, 1)
-    train_labels = y[:2500]
+    train_labels = y[:2100]
 
-    test_inputs = np.array([np.array(val) for val in X])[2500:]
+    validation_inputs = np.array([np.array(val) for val in X])[2100:2582]
+    validation_inputs = validation_inputs.reshape(-1, 1, 128, 128)
+    validation_inputs = validation_inputs.transpose(0, 2, 3, 1)
+    validation_labels = y[2100:2582]
+
+    test_inputs = np.array([np.array(val) for val in X])[2582:]
     test_inputs = test_inputs.reshape(-1, 1, 128, 128)
-    # print("before reshaping 2")
-    # print(train_inputs.shape, train_labels.shape, test_inputs.shape, test_labels.shape)
     test_inputs = test_inputs.transpose(0, 2, 3, 1)
-    test_labels = y[2500:]
+    test_labels = y_not_one_hot[2582:]
 
     # print("final")
     # print(train_inputs.shape, train_labels.shape, test_inputs.shape, test_labels.shape)
 
     model = Sequential()
-    model.add(tf.keras.layers.Conv2D(32, 1, activation="relu"))
+    model.add(tf.keras.layers.Conv2D(32, 3, activation="relu"))
     model.add(tf.keras.layers.BatchNormalization())
     model.add(tf.keras.layers.ReLU())
     model.add(tf.keras.layers.MaxPool2D())
-    model.add(tf.keras.layers.Conv2D(16, 1, activation="relu"))
+    model.add(tf.keras.layers.Conv2D(16, 2, activation="relu"))
     model.add(tf.keras.layers.BatchNormalization())
     model.add(tf.keras.layers.ReLU())
     model.add(tf.keras.layers.MaxPool2D())
