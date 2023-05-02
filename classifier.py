@@ -14,6 +14,7 @@ import math
 # ensures that we run only on cpu
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
+
 def main():
     '''
     Read in MRI data of 3 classes, initialize model, and train and 
@@ -60,18 +61,20 @@ def main():
     model.add(tf.keras.layers.BatchNormalization())
     model.add(tf.keras.layers.ReLU())
     model.add(tf.keras.layers.Flatten())
-    model.add(tf.keras.layers.Dense(2, activation="softmax"))
-    model.add(tf.keras.layers.Dense(3))
+    model.add(tf.keras.layers.Dense(3, activation="softmax"))
+    # model.add(tf.keras.layers.Dense(3))
 
-    optimizer = tf.keras.optimizers.Adam(learning_rate = 0.001)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
     loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
-    metrics = ["accuracy"]     
+    metrics = ["accuracy"]
 
     model.compile(optimizer=optimizer,
-              loss=loss,
-              metrics=metrics)
-    
-    model.fit(train_inputs, train_labels, epochs=20, batch_size=32, validation_data=(test_inputs, test_labels))
+                  loss=loss,
+                  metrics=metrics)
+
+    model.fit(train_inputs, train_labels, epochs=20, batch_size=64,
+              validation_data=(test_inputs, test_labels))
+
 
 if __name__ == '__main__':
     main()
