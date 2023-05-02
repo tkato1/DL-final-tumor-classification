@@ -25,6 +25,11 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, o
     X = np.empty(number_images, dtype=object)
     y = np.empty(number_images, dtype='uint8')
 
+    a = 0
+    b = 0
+    c = 0
+
+
     for i, filename in enumerate(raw_images):
         if filename.endswith('.mat'): # load the .mat file using scipy.io.loadmat()
             data = mat73.loadmat(os.path.join(input_dir, filename))['cjdata'] #dict_keys(['PID', 'image', 'label', 'tumorBorder', 'tumorMask'])
@@ -53,18 +58,23 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, o
                 plt.savefig(output_dir + "image" + str(i) + ".jpg")
             else:
                 X[i] = downsampled_image / 255
-                # print(filename, i)
                 y[i] = data['label'] - 1
+                if y[i] == 0:
+                    a += 1
+                elif y[i] == 1:
+                    b += 1
+                else:
+                    c += 1
+
 
             if save_labels:
                 with open('labels/labels.txt', 'a') as f:
                     f.write(str(data['label']))
         else:
             print(filename, i)
+    
+    print("0, 1, 2 is", a, b, c)
 
-
-    # for i in range(756):
-    #     print(i, np.shape(X[i]))
     X = np.stack(X, axis=0)
     y = np.reshape(y, (-1,1))
 
