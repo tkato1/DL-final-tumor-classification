@@ -54,7 +54,7 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, o
             else:
                 X[i] = downsampled_image / 255
                 # print(filename, i)
-                y[i] = data['label']
+                y[i] = data['label'] - 1
 
             if save_labels:
                 with open('labels/labels.txt', 'a') as f:

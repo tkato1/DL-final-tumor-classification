@@ -29,6 +29,7 @@ def main():
     y = np.concatenate([y, y2, y3, y4])
     X = tf.convert_to_tensor(X, dtype=tf.float32)
     y = tf.convert_to_tensor(y, dtype=tf.int32)
+    y_not_one_hot = y
     y = tf.one_hot(y, 3, dtype=tf.float32)
     y = tf.reshape(y, (y.shape[0], y.shape[2]))
 
@@ -45,7 +46,7 @@ def main():
     test_inputs = np.array([np.array(val) for val in X])[2582:]
     test_inputs = test_inputs.reshape(-1, 1, 128, 128)
     test_inputs = test_inputs.transpose(0, 2, 3, 1)
-    test_labels = y[2582:]
+    test_labels = y_not_one_hot[2582:]
 
 
     # print("final")
@@ -68,25 +69,28 @@ def main():
     model.add(tf.keras.layers.BatchNormalization())
     model.add(tf.keras.layers.ReLU())
     model.add(tf.keras.layers.Flatten())
-    model.add(tf.keras.layers.Dense(2))
-    model.add(tf.keras.layers.Softmax())
+    model.add(tf.keras.layers.Dense(5, activation="softmax"))
     model.add(tf.keras.layers.Dense(3))
 
-    optimizer = tf.keras.optimizers.Adam(learning_rate = 0.001)
+
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
     loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
-    metrics = ["accuracy"]     
+    metrics = ["accuracy"]
 
     model.compile(optimizer=optimizer,
-              loss=loss,
-              metrics=metrics)
+                  loss=loss,
+                  metrics=metrics)
+
+    model.fit(train_inputs, train_labels, epochs=50, batch_size=64,
+              validation_data=(validation_inputs, validation_labels))
 
     
-    model.fit(train_inputs, train_labels, epochs=20, batch_size=64, validation_data=(validation_inputs, validation_labels))
+    preds = np.argmax(model.predict(test_inputs), axis=1)
+    print(tf.math.confusion_matrix(test_labels, preds, num_classes=3))
 
-    model.summary()
     
-    #testing 
-    print(tf.math.confusion_matrix(test_labels, model.predict(test_inputs), num_classes=3))
+    # print(tf.math.confusion_matrix(test_labels, tf.one_hot(np.argmax(model.predict(test_inputs), axis=1), 3, dtype=tf.float32)))
+
 
 if __name__ == '__main__':
     main()
