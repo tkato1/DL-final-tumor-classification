@@ -65,7 +65,7 @@ def main():
     # model.add(tf.keras.layers.Dense(3))
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-    loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
+    loss = tf.keras.losses.CategoricalCrossentropy(from_logits=False)
     metrics = ["accuracy"]
 
     model.compile(optimizer=optimizer,
