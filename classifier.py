@@ -108,10 +108,11 @@ def main():
             for j in range(num_classes):
                 if k != i and j != i:
                     tn += confusion[k, j]
-        accuracy[i] = (tp + tn)/(tp + fp + tn + fn)
-        sensitivity[i] = (tp)/(tp + fn)
-        specificity[i] = (tn)/(tn + fp)
-        precision[i] = (tp)/(tp + fp)
+        accuracy[i] = (tp + tn)/(tp + fp + tn + fn +
+                                 tf.keras.backend.epsilon())
+        sensitivity[i] = (tp)/(tp + fn + tf.keras.backend.epsilon())
+        specificity[i] = (tn)/(tn + fp + tf.keras.backend.epsilon())
+        precision[i] = (tp)/(tp + fp + tf.keras.backend.epsilon())
 
 
 if __name__ == '__main__':
