@@ -104,6 +104,13 @@ def main():
         sensitivity[i] = (tp)/(tp + fn)
         specificity[i] = (tn)/(tn + fp)
         precision[i] = (tp)/(tp + fp)
+    model.fit(train_inputs, train_labels, epochs=50, batch_size=64,
+              validation_data=(validation_inputs, validation_labels))
+
+    # preds = np.argmax(model.predict(test_inputs), axis=1)
+    # print(tf.math.confusion_matrix(test_labels, preds, num_classes=3))
+
+    # print(tf.math.confusion_matrix(test_labels, tf.one_hot(np.argmax(model.predict(test_inputs), axis=1), 3, dtype=tf.float32)))
 
 
 if __name__ == '__main__':
