@@ -6,3 +6,4 @@ dependencies:
   - cv2
   - scikit-image
   - matplotlib
+  - seaborn

@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 from preprocess import load_data
 from tensorflow.keras import Sequential, models
 from tensorflow.keras.optimizers import SGD
+from confusion_matrix import make_confusion_matrix
 
 
 import os
@@ -13,6 +14,28 @@ import math
 
 # ensures that we run only on cpu
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+def stats(confusion, num_classes=3):
+    accuracy = np.zeros(num_classes)
+    precision = np.zeros(num_classes)
+    specificity = np.zeros(num_classes)
+    sensitivity = np.zeros(num_classes)
+    for i in range(num_classes):
+        tp = confusion[i, i]
+        fp = np.sum(confusion[:, i]) - tp
+        fn = np.sum(confusion[i, :]) - tp
+        tn = tp - tp
+        for k in range(num_classes):
+            for j in range(num_classes):
+                if k != i and j != i:
+                    tn += confusion[k, j]
+        accuracy[i] = (tp + tn)/(tp + fp + tn + fn +
+                                 tf.keras.backend.epsilon())
+        sensitivity[i] = (tp)/(tp + fn + tf.keras.backend.epsilon())
+        specificity[i] = (tn)/(tn + fp + tf.keras.backend.epsilon())
+        precision[i] = (tp)/(tp + fp + tf.keras.backend.epsilon())
+    
+    return accuracy, precision, specificity, sensitivity
 
 
 def main():
@@ -83,6 +106,7 @@ def main():
                   loss=loss,
                   metrics=metrics)
 
+
     model.fit(train_inputs, train_labels, epochs=5, batch_size=64,
               validation_data=(validation_inputs, validation_labels))
 
@@ -112,6 +136,7 @@ def main():
         sensitivity[i] = (tp)/(tp + fn + tf.keras.backend.epsilon())
         specificity[i] = (tn)/(tn + fp + tf.keras.backend.epsilon())
         precision[i] = (tp)/(tp + fp + tf.keras.backend.epsilon())
+
 
 
 
