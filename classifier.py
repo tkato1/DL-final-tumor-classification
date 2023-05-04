@@ -45,7 +45,7 @@ def main():
     test  model for a number of epochs.
     '''
 
-    X, y = load_data("data/set1", downsampling_factor=4)
+    X, y = load_data("data/set1", downsampling_factor=4, process="crop")
     X = tf.convert_to_tensor(X, dtype=tf.float32)
     y = tf.convert_to_tensor(y, dtype=tf.int32)
     y_not_one_hot = y
@@ -94,7 +94,7 @@ def main():
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
     loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
     metrics = ["accuracy"]
-    epochs = 3
+    epochs = 10
 
     model.compile(optimizer=optimizer,
                   loss=loss,
@@ -103,18 +103,17 @@ def main():
     history = model.fit(train_inputs, train_labels, epochs=epochs, batch_size=64,
                         validation_data=(validation_inputs, validation_labels))
 
-    print(history.history.keys())
-    # Plot the training loss
     plt.plot(np.linspace(0, epochs, epochs, endpoint=True),
              history.history['accuracy'])
     plt.plot(np.linspace(0, epochs, epochs, endpoint=True),
              history.history['val_accuracy'])
-    plt.title('Training Accuracy')
+    plt.title('Accuracy vs Epochs')
+    plt.legend(['Training_Accuracy', 'Validation_Accuracy'])
     plt.xlabel('Epochs')
     plt.xticks(np.arange(0, epochs+1, 100))
-    plt.yticks(np.arange(0, 101, 20))
+    plt.yticks(np.arange(0, 1.01, .2))
     plt.ylabel('Accuracy')
-    plt.savefig("graph")
+    plt.savefig("visualizations/segmented_training_plot")
     plt.show()
 
     y_prob = model.predict(train_test_inputs)
@@ -125,12 +124,18 @@ def main():
     print("confusion matrix:\n", confusion, confusion.shape)
 
     accuracy, precision, specificity, sensitivity = stats(confusion, 3)
-    print(accuracy, precision, specificity, sensitivity)
+
+    print(
+        f"accuracy: {accuracy}, precision: {precision}, specificity: {specificity}, sensitivity: {sensitivity}")
+
+    with open('stats/stat.txt', 'a') as f:
+        f.write(
+            f"accuracy: {accuracy}, precision: {precision}, specificity: {specificity}, sensitivity: {sensitivity}")
 
     make_confusion_matrix(confusion,
                           categories=["Glioma", "Meningioma",
                                       "Pituitary Tumor"],
-                          output_file="confusion_cropped")
+                          output_file="visualizations/confusion_matrix_segmented")
 
 
 if __name__ == '__main__':
