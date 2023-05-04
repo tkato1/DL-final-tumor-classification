@@ -49,13 +49,11 @@ def main():
     test_inputs = test_inputs.transpose(0, 2, 3, 1)
     test_labels = y_not_one_hot[2582:]
 
-    inputs = np.array([np.array(val) for val in X])
-    inputs = inputs.reshape(-1, 1, 128, 128)
-    inputs = inputs.transpose(0, 2, 3, 1)
+    testing_inputs = tf.convert_to_tensor(np.concatenate([train_inputs, test_inputs], 0), dtype=tf.float32)
+    print(np.shape(testing_inputs))
+    testing_labels = tf.convert_to_tensor(np.concatenate([y_not_one_hot[:2100], y_not_one_hot[2582:]], 0), dtype=tf.int32)
+    print(np.shape(testing_labels))
 
-
-    # print("final")
-    # print(train_inputs.shape, train_labels.shape, test_inputs.shape, test_labels.shape)
 
     model = Sequential()
     model.add(tf.keras.layers.Conv2D(32, 3, activation="relu"))
@@ -85,41 +83,36 @@ def main():
                   loss=loss,
                   metrics=metrics)
 
-    model.fit(train_inputs, train_labels, epochs=500, batch_size=64,
+    model.fit(train_inputs, train_labels, epochs=5, batch_size=64,
               validation_data=(validation_inputs, validation_labels))
 
+
     
-    preds = np.argmax(model.predict(test_inputs), axis=1)
-    print(tf.math.confusion_matrix(labels=test_labels, predictions=preds, num_classes=3))
+    preds = np.argmax(model.predict(testing_inputs), axis=1)
+    print(tf.math.confusion_matrix(labels=testing_labels, predictions=preds, num_classes=3))
 
-    pred_2 = np.argmax(model.predict(inputs), axis=1)
-    print(tf.math.confusion_matrix(labels=y_not_one_hot, predictions=pred_2, num_classes=3))
+    confusion = tf.math.confusion_matrix(labels=testing_labels, predictions=preds).numpy()
+    print("confusion matrix:\n", confusion)
+    num_classes = 3
+    accuracy = np.zeros(num_classes)
+    precision = np.zeros(num_classes)
+    specificity = np.zeros(num_classes)
+    sensitivity = np.zeros(num_classes)
+    for i in range(num_classes):
+        tp = confusion[i, i]
+        fp = np.sum(confusion[:, i]) - tp
+        fn = np.sum(confusion[i, :]) - tp
+        tn = tp - tp
+        for k in range(num_classes):
+            for j in range(num_classes):
+                if k != i and j != i:
+                    tn += confusion[k, j]
+        accuracy[i] = (tp + tn)/(tp + fp + tn + fn +
+                                 tf.keras.backend.epsilon())
+        sensitivity[i] = (tp)/(tp + fn + tf.keras.backend.epsilon())
+        specificity[i] = (tn)/(tn + fp + tf.keras.backend.epsilon())
+        precision[i] = (tp)/(tp + fp + tf.keras.backend.epsilon())
 
-    # model.fit(train_inputs, train_labels, epochs=5, batch_size=64,
-    #           validation_data=(validation_inputs, validation_labels))
-    # y_prob = model.predict(test_inputs)
-    # y_pred = np.argmax(y_prob, axis=1)
-    # confusion = tf.math.confusion_matrix(
-    #     labels=test_labels, predictions=y_pred).numpy()
-    # print("confusion matrix:\n", confusion)
-    # num_classes = 3
-    # accuracy = np.zeros(num_classes)
-    # precision = np.zeros(num_classes)
-    # specificity = np.zeros(num_classes)
-    # sensitivity = np.zeros(num_classes)
-    # for i in range(num_classes):
-    #     tp = confusion[i, i]
-    #     fp = np.sum(confusion[:, i]) - tp
-    #     fn = np.sum(confusion[i, :]) - tp
-    #     tn = tp - tp
-    #     for k in range(num_classes):
-    #         for j in range(num_classes):
-    #             if k != i and j != i:
-    #                 tn += confusion[k, j]
-    #     accuracy[i] = (tp + tn)/(tp + fp + tn + fn)
-    #     sensitivity[i] = (tp)/(tp + fn)
-    #     specificity[i] = (tn)/(tn + fp)
-    #     precision[i] = (tp)/(tp + fp)
 
 
 if __name__ == '__main__':
