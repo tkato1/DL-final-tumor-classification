@@ -45,7 +45,7 @@ def main():
     test  model for a number of epochs.
     '''
 
-    X, y = load_data("data/set1", downsampling_factor=4, process="crop")
+    X, y = load_data("data/set1", downsampling_factor=4, process="segment")
     X = tf.convert_to_tensor(X, dtype=tf.float32)
     y = tf.convert_to_tensor(y, dtype=tf.int32)
     y_not_one_hot = y
@@ -94,7 +94,7 @@ def main():
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
     loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
     metrics = ["accuracy"]
-    epochs = 10
+    epochs = 700
 
     model.compile(optimizer=optimizer,
                   loss=loss,

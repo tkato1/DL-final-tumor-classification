@@ -32,6 +32,9 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, o
             image_data = np.asarray(data['image'].astype('uint8'))
             mask = np.asarray(data['tumorMask'])
 
+            if process == "uncrop":
+                image_data = cv2.resize(cropped_image, (512,512), interpolation=cv2.INTER_AREA) #scaled to 512x512
+
             if process == "segment":
                 # masking image with tumorMask
                 masked_image = np.where(mask, image_data, 0)
