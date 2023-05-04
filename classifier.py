@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 from preprocess import load_data
 from tensorflow.keras import Sequential, models
 from tensorflow.keras.optimizers import SGD
+from confusion_matrix import make_confusion_matrix
 
 
 import os
@@ -13,6 +14,28 @@ import math
 
 # ensures that we run only on cpu
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+def stats(confusion, num_classes=3):
+    accuracy = np.zeros(num_classes)
+    precision = np.zeros(num_classes)
+    specificity = np.zeros(num_classes)
+    sensitivity = np.zeros(num_classes)
+    for i in range(num_classes):
+        tp = confusion[i, i]
+        fp = np.sum(confusion[:, i]) - tp
+        fn = np.sum(confusion[i, :]) - tp
+        tn = tp - tp
+        for k in range(num_classes):
+            for j in range(num_classes):
+                if k != i and j != i:
+                    tn += confusion[k, j]
+        accuracy[i] = (tp + tn)/(tp + fp + tn + fn +
+                                 tf.keras.backend.epsilon())
+        sensitivity[i] = (tp)/(tp + fn + tf.keras.backend.epsilon())
+        specificity[i] = (tn)/(tn + fp + tf.keras.backend.epsilon())
+        precision[i] = (tp)/(tp + fp + tf.keras.backend.epsilon())
+    
+    return accuracy, precision, specificity, sensitivity
 
 
 def main():
@@ -78,41 +101,20 @@ def main():
                   loss=loss,
                   metrics=metrics)
 
-    # model.fit(train_inputs, train_labels, epochs=50, batch_size=64,
-    #           validation_data=(validation_inputs, validation_labels))
-
-    # preds = np.argmax(model.predict(test_inputs), axis=1)
-    # print(tf.math.confusion_matrix(test_labels, preds, num_classes=3))
-
-    # pred_2 = np.argmax(model.predict(inputs), axis=1)
-    # print(tf.math.confusion_matrix(y_not_one_hot, pred_2, num_classes=3))
-
-    model.fit(train_inputs, train_labels, epochs=5, batch_size=64,
+    model.fit(train_inputs, train_labels, epochs=1, batch_size=64,
               validation_data=(validation_inputs, validation_labels))
     y_prob = model.predict(test_inputs)
     y_pred = np.argmax(y_prob, axis=1)
     confusion = tf.math.confusion_matrix(
         labels=test_labels, predictions=y_pred).numpy()
-    print("confusion matrix:\n", confusion)
-    num_classes = 3
-    accuracy = np.zeros(num_classes)
-    precision = np.zeros(num_classes)
-    specificity = np.zeros(num_classes)
-    sensitivity = np.zeros(num_classes)
-    for i in range(num_classes):
-        tp = confusion[i, i]
-        fp = np.sum(confusion[:, i]) - tp
-        fn = np.sum(confusion[i, :]) - tp
-        tn = tp - tp
-        for k in range(num_classes):
-            for j in range(num_classes):
-                if k != i and j != i:
-                    tn += confusion[k, j]
-        accuracy[i] = (tp + tn)/(tp + fp + tn + fn +
-                                 tf.keras.backend.epsilon())
-        sensitivity[i] = (tp)/(tp + fn + tf.keras.backend.epsilon())
-        specificity[i] = (tn)/(tn + fp + tf.keras.backend.epsilon())
-        precision[i] = (tp)/(tp + fp + tf.keras.backend.epsilon())
+    print("confusion matrix:\n", confusion, confusion.shape)
+
+    accuracy, precision, specificity, sensitivity = stats(confusion, 3)
+    print(accuracy, precision, specificity, sensitivity)
+
+    make_confusion_matrix(confusion,
+                          categories=["Glioma", "Meningioma", "Pituitary Tumor"], 
+                          output_file="confusion_cropped")
 
 
 if __name__ == '__main__':
