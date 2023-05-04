@@ -29,21 +29,17 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, o
         if filename.endswith('.mat'): # load the .mat file using scipy.io.loadmat()
             data = mat73.loadmat(os.path.join(input_dir, filename))['cjdata'] #dict_keys(['PID', 'image', 'label', 'tumorBorder', 'tumorMask'])
             image_data = np.asarray(data['image'].astype('uint8'))
+            mask = np.asarray(data['tumorMask'])
 
-            if (np.shape(image_data) != (512, 512)):
-                image_data = cv2.resize(image_data, (512,512), interpolation=cv2.INTER_AREA)
-                
             if process == "segment":
-                masked_image = np.where(data['tumorMask'], image_data, 0) #masking image with tumorMask
+                masked_image = np.where(mask, image_data, 0) #masking image with tumorMask
                 cropped_image = crop_nonzero(masked_image) #cropped it
                 image_data = cv2.resize(cropped_image, (512,512), interpolation=cv2.INTER_AREA) #scaled to 512x512
                 
             if process == "crop":
-                masked_image = np.where(data['tumorMask'], image_data, 0) #this is only to retrieve the crop indices
+                masked_image = np.where(mask, image_data, 0) #this is only to retrieve the crop indices
                 cropped_masked_image, indices = crop_nonzero(masked_image, include_index=True) #cropped it
                 a, b, c, d = indices
-                # visualize(cropped_masked_image) #masked
-                # visualize(image_data[a:b, c:d]) #unmasked
                 image_data = cv2.resize(image_data[a:b, c:d], (512,512), interpolation=cv2.INTER_AREA) #scaled to 512x512
 
             downsampled_image = downsample(image_data, factor=downsampling_factor) #downsampling image
@@ -55,13 +51,12 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, o
                 X[i] = downsampled_image / 255
                 y[i] = data['label'] - 1
 
-
             if save_labels:
                 with open('labels/labels.txt', 'a') as f:
                     f.write(str(data['label']))
         else:
-            print(filename, i)
-    
+            print(filename, i, f"{filename} not .mat")
+
     X = np.stack(X, axis=0)
     y = np.reshape(y, (-1,1))
 
