@@ -33,7 +33,7 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, o
             mask = np.asarray(data['tumorMask'])
 
             if process == "uncrop":
-                image_data = cv2.resize(cropped_image, (512,512), interpolation=cv2.INTER_AREA) #scaled to 512x512
+                image_data = cv2.resize(image_data, (512,512), interpolation=cv2.INTER_AREA) #scaled to 512x512
 
             if process == "segment":
                 # masking image with tumorMask
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     output_dir = args.output_path
 
     X, y = load_data(input_dir, process=process,
-                     downsampling_factor=8, output_dir=output_dir)
+                     downsampling_factor=8, output_dir=output_dir, jpegs=True)
     print(f"X shape: {X.shape}, Y shape: {y.shape}")
 
     fig, axes = plt.subplots(nrows=2, ncols=5, figsize=(12, 6))
