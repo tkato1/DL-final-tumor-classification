@@ -15,6 +15,7 @@ import math
 # ensures that we run only on cpu
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
+
 def stats(confusion, num_classes=3):
     accuracy = np.zeros(num_classes)
     precision = np.zeros(num_classes)
@@ -34,7 +35,7 @@ def stats(confusion, num_classes=3):
         sensitivity[i] = (tp)/(tp + fn + tf.keras.backend.epsilon())
         specificity[i] = (tn)/(tn + fp + tf.keras.backend.epsilon())
         precision[i] = (tp)/(tp + fp + tf.keras.backend.epsilon())
-    
+
     return accuracy, precision, specificity, sensitivity
 
 
@@ -65,8 +66,10 @@ def main():
     test_inputs = test_inputs.reshape(-1, 1, 128, 128)
     test_inputs = test_inputs.transpose(0, 2, 3, 1)
 
-    train_test_inputs = tf.convert_to_tensor(np.concatenate([train_inputs, test_inputs], 0), dtype=tf.float32)
-    train_test_labels = tf.convert_to_tensor(np.concatenate([y_not_one_hot[:2100], y_not_one_hot[2582:]], 0), dtype=tf.int32)
+    train_test_inputs = tf.convert_to_tensor(np.concatenate(
+        [train_inputs, test_inputs], 0), dtype=tf.float32)
+    train_test_labels = tf.convert_to_tensor(np.concatenate(
+        [y_not_one_hot[:2100], y_not_one_hot[2582:]], 0), dtype=tf.int32)
 
     model = Sequential()
     model.add(tf.keras.layers.Conv2D(32, 3, activation="relu"))
@@ -98,12 +101,14 @@ def main():
                   metrics=metrics)
 
     history = model.fit(train_inputs, train_labels, epochs=epochs, batch_size=64,
-              validation_data=(validation_inputs, validation_labels))
-    
+                        validation_data=(validation_inputs, validation_labels))
+
     print(history.history.keys())
     # Plot the training loss
-    plt.plot(np.linspace(0, epochs, epochs, endpoint=True), history.history['accuracy'])
-    plt.plot(np.linspace(0, epochs, epochs, endpoint=True), history.history['val_accuracy'])
+    plt.plot(np.linspace(0, epochs, epochs, endpoint=True),
+             history.history['accuracy'])
+    plt.plot(np.linspace(0, epochs, epochs, endpoint=True),
+             history.history['val_accuracy'])
     plt.title('Training Accuracy')
     plt.xlabel('Epochs')
     plt.xticks(np.arange(0, epochs+1, 100))
@@ -111,7 +116,7 @@ def main():
     plt.ylabel('Accuracy')
     plt.savefig("graph")
     plt.show()
-    
+
     y_prob = model.predict(train_test_inputs)
     y_pred = np.argmax(y_prob, axis=1)
 
@@ -123,8 +128,10 @@ def main():
     print(accuracy, precision, specificity, sensitivity)
 
     make_confusion_matrix(confusion,
-                          categories=["Glioma", "Meningioma", "Pituitary Tumor"], 
+                          categories=["Glioma", "Meningioma",
+                                      "Pituitary Tumor"],
                           output_file="confusion_cropped")
+
 
 if __name__ == '__main__':
     main()
