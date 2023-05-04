@@ -24,6 +24,12 @@ def main():
     X, y = load_data("data/set1", downsampling_factor=4)
     X = tf.convert_to_tensor(X, dtype=tf.float32)
     y = tf.convert_to_tensor(y, dtype=tf.int32)
+    num_examples = np.arange(np.shape(X)[0])
+    #shuffle them 
+    num_examples = tf.random.shuffle(num_examples)
+    
+    X = tf.gather(X, num_examples)
+    y = tf.gather(y, num_examples)
     y_not_one_hot = y
     y = tf.one_hot(y, 3, dtype=tf.float32)
     y = tf.reshape(y, (y.shape[0], y.shape[2]))
@@ -79,41 +85,41 @@ def main():
                   loss=loss,
                   metrics=metrics)
 
-    # model.fit(train_inputs, train_labels, epochs=50, batch_size=64,
-    #           validation_data=(validation_inputs, validation_labels))
+    model.fit(train_inputs, train_labels, epochs=500, batch_size=64,
+              validation_data=(validation_inputs, validation_labels))
 
     
-    # preds = np.argmax(model.predict(test_inputs), axis=1)
-    # print(tf.math.confusion_matrix(test_labels, preds, num_classes=3))
+    preds = np.argmax(model.predict(test_inputs), axis=1)
+    print(tf.math.confusion_matrix(labels=test_labels, predictions=preds, num_classes=3))
 
-    # pred_2 = np.argmax(model.predict(inputs), axis=1)
-    # print(tf.math.confusion_matrix(y_not_one_hot, pred_2, num_classes=3))
+    pred_2 = np.argmax(model.predict(inputs), axis=1)
+    print(tf.math.confusion_matrix(labels=y_not_one_hot, predictions=pred_2, num_classes=3))
 
-    model.fit(train_inputs, train_labels, epochs=5, batch_size=64,
-              validation_data=(validation_inputs, validation_labels))
-    y_prob = model.predict(test_inputs)
-    y_pred = np.argmax(y_prob, axis=1)
-    confusion = tf.math.confusion_matrix(
-        labels=test_labels, predictions=y_pred).numpy()
-    print("confusion matrix:\n", confusion)
-    num_classes = 3
-    accuracy = np.zeros(num_classes)
-    precision = np.zeros(num_classes)
-    specificity = np.zeros(num_classes)
-    sensitivity = np.zeros(num_classes)
-    for i in range(num_classes):
-        tp = confusion[i, i]
-        fp = np.sum(confusion[:, i]) - tp
-        fn = np.sum(confusion[i, :]) - tp
-        tn = tp - tp
-        for k in range(num_classes):
-            for j in range(num_classes):
-                if k != i and j != i:
-                    tn += confusion[k, j]
-        accuracy[i] = (tp + tn)/(tp + fp + tn + fn)
-        sensitivity[i] = (tp)/(tp + fn)
-        specificity[i] = (tn)/(tn + fp)
-        precision[i] = (tp)/(tp + fp)
+    # model.fit(train_inputs, train_labels, epochs=5, batch_size=64,
+    #           validation_data=(validation_inputs, validation_labels))
+    # y_prob = model.predict(test_inputs)
+    # y_pred = np.argmax(y_prob, axis=1)
+    # confusion = tf.math.confusion_matrix(
+    #     labels=test_labels, predictions=y_pred).numpy()
+    # print("confusion matrix:\n", confusion)
+    # num_classes = 3
+    # accuracy = np.zeros(num_classes)
+    # precision = np.zeros(num_classes)
+    # specificity = np.zeros(num_classes)
+    # sensitivity = np.zeros(num_classes)
+    # for i in range(num_classes):
+    #     tp = confusion[i, i]
+    #     fp = np.sum(confusion[:, i]) - tp
+    #     fn = np.sum(confusion[i, :]) - tp
+    #     tn = tp - tp
+    #     for k in range(num_classes):
+    #         for j in range(num_classes):
+    #             if k != i and j != i:
+    #                 tn += confusion[k, j]
+    #     accuracy[i] = (tp + tn)/(tp + fp + tn + fn)
+    #     sensitivity[i] = (tp)/(tp + fn)
+    #     specificity[i] = (tn)/(tn + fp)
+    #     precision[i] = (tp)/(tp + fp)
 
 
 if __name__ == '__main__':
