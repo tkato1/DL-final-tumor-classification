@@ -92,7 +92,7 @@ def main():
     loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
     metrics = ["accuracy"]
 
-    epochs = 20
+    epochs = 700
 
 
     model.compile(optimizer=optimizer,
@@ -102,14 +102,13 @@ def main():
     history = model.fit(train_inputs, train_labels, epochs=epochs, batch_size=64,
               validation_data=(validation_inputs, validation_labels))
     
-    # Plot the training loss
     plt.plot(np.linspace(0, epochs, epochs, endpoint=True), history.history['accuracy'])
     plt.plot(np.linspace(0, epochs, epochs, endpoint=True), history.history['val_accuracy'])
-    plt.title('Training Accuracy')
+    plt.title('Accuracy vs Epochs')
     plt.legend(['Training_Accuracy', 'Validation_Accuracy'])
     plt.xlabel('Epochs')
     plt.xticks(np.arange(0, epochs+1, 100))
-    plt.yticks(np.arange(0, 101, 20))
+    plt.yticks(np.arange(0, 1.01, .2))
     plt.ylabel('Accuracy')
     plt.savefig("visualizations/segmented_training_plot")
     plt.show()
@@ -122,7 +121,11 @@ def main():
     print("confusion matrix:\n", confusion, confusion.shape)
 
     accuracy, precision, specificity, sensitivity = stats(confusion, 3)
-    print(accuracy, precision, specificity, sensitivity)
+
+    print(f"accuracy: {accuracy}, precision: {precision}, specificity: {specificity}, sensitivity: {sensitivity}")
+
+    with open('stats/stat.txt', 'a') as f:
+        f.write(f"accuracy: {accuracy}, precision: {precision}, specificity: {specificity}, sensitivity: {sensitivity}")
 
     make_confusion_matrix(confusion,
                           categories=["Glioma", "Meningioma", "Pituitary Tumor"], 
