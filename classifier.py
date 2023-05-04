@@ -115,7 +115,7 @@ def main():
     make_confusion_matrix(confusion,
                           categories=["Glioma", "Meningioma", "Pituitary Tumor"], 
                           output_file="confusion_cropped")
-
+    print('adf')
 
 if __name__ == '__main__':
     main()
