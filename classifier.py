@@ -85,35 +85,19 @@ def main():
 
     model.fit(train_inputs, train_labels, epochs=5, batch_size=64,
               validation_data=(validation_inputs, validation_labels))
+    y_prob = model.predict(test_inputs)
+    y_pred = np.argmax(y_prob, axis=1)
+    confusion = tf.math.confusion_matrix(
+        labels=test_labels, predictions=y_pred).numpy()
+    print("confusion matrix:\n", confusion, confusion.shape)
 
+    accuracy, precision, specificity, sensitivity = stats(confusion, 3)
+    print(accuracy, precision, specificity, sensitivity)
 
-    
-    preds = np.argmax(model.predict(testing_inputs), axis=1)
-    print(tf.math.confusion_matrix(labels=testing_labels, predictions=preds, num_classes=3))
-
-    confusion = tf.math.confusion_matrix(labels=testing_labels, predictions=preds).numpy()
-    print("confusion matrix:\n", confusion)
-    num_classes = 3
-    accuracy = np.zeros(num_classes)
-    precision = np.zeros(num_classes)
-    specificity = np.zeros(num_classes)
-    sensitivity = np.zeros(num_classes)
-    for i in range(num_classes):
-        tp = confusion[i, i]
-        fp = np.sum(confusion[:, i]) - tp
-        fn = np.sum(confusion[i, :]) - tp
-        tn = tp - tp
-        for k in range(num_classes):
-            for j in range(num_classes):
-                if k != i and j != i:
-                    tn += confusion[k, j]
-        accuracy[i] = (tp + tn)/(tp + fp + tn + fn +
-                                 tf.keras.backend.epsilon())
-        sensitivity[i] = (tp)/(tp + fn + tf.keras.backend.epsilon())
-        specificity[i] = (tn)/(tn + fp + tf.keras.backend.epsilon())
-        precision[i] = (tp)/(tp + fp + tf.keras.backend.epsilon())
-
-
+    make_confusion_matrix(confusion,
+                          categories=["Glioma", "Meningioma", "Pituitary Tumor"], 
+                          output_file="confusion_cropped")
+    print('adf')
 
 if __name__ == '__main__':
     main()
