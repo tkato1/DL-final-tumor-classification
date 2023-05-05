@@ -81,7 +81,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--df', type=int, default=8,help='downsampling factor')
     args = parser.parse_args()
-    df = argparse.df
+    df = args.df
 
 
     X, y = load_data("data/set1", downsampling_factor=df, process="segment")
