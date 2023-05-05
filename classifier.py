@@ -45,7 +45,7 @@ def main():
     test  model for a number of epochs.
     '''
 
-    X, y = load_data("data/set1", downsampling_factor=4, process="crop")
+    X, y = load_data("data/set1", downsampling_factor=4, process="uncrop")
     X = tf.convert_to_tensor(X, dtype=tf.float32)
     y = tf.convert_to_tensor(y, dtype=tf.int32)
     y_not_one_hot = y
