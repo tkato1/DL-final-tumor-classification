@@ -21,28 +21,38 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, o
     raw_images = [f for f in os.listdir(input_dir) if not f.startswith('.')]
     number_images = len(raw_images)
 
-    #pre-initialization
+    # pre-initialization
     X = np.empty(number_images, dtype=object)
     y = np.empty(number_images, dtype='uint8')
 
     for i, filename in enumerate(raw_images):
-        if filename.endswith('.mat'): # load the .mat file using scipy.io.loadmat()
-            data = mat73.loadmat(os.path.join(input_dir, filename))['cjdata'] #dict_keys(['PID', 'image', 'label', 'tumorBorder', 'tumorMask'])
+        if filename.endswith('.mat'):  # load the .mat file using scipy.io.loadmat()
+            # dict_keys(['PID', 'image', 'label', 'tumorBorder', 'tumorMask'])
+            data = mat73.loadmat(os.path.join(input_dir, filename))['cjdata']
             image_data = np.asarray(data['image'].astype('uint8'))
             mask = np.asarray(data['tumorMask'])
 
-            if process == "segment":
-                masked_image = np.where(mask, image_data, 0) #masking image with tumorMask
-                cropped_image = crop_nonzero(masked_image) #cropped it
+            if process == "uncrop":
                 image_data = cv2.resize(cropped_image, (512,512), interpolation=cv2.INTER_AREA) #scaled to 512x512
-                
-            if process == "crop":
-                masked_image = np.where(mask, image_data, 0) #this is only to retrieve the crop indices
-                cropped_masked_image, indices = crop_nonzero(masked_image, include_index=True) #cropped it
-                a, b, c, d = indices
-                image_data = cv2.resize(image_data[a:b, c:d], (512,512), interpolation=cv2.INTER_AREA) #scaled to 512x512
 
-            downsampled_image = downsample(image_data, factor=downsampling_factor) #downsampling image
+            if process == "segment":
+                # masking image with tumorMask
+                masked_image = np.where(mask, image_data, 0)
+                cropped_image = crop_nonzero(masked_image)  # cropped it
+                image_data = cv2.resize(
+                    cropped_image, (512, 512), interpolation=cv2.INTER_AREA)  # scaled to 512x512
+
+            if process == "crop":
+                # this is only to retrieve the crop indices
+                masked_image = np.where(mask, image_data, 0)
+                cropped_masked_image, indices = crop_nonzero(
+                    masked_image, include_index=True)  # cropped it
+                a, b, c, d = indices
+                image_data = cv2.resize(
+                    image_data[a:b, c:d], (512, 512), interpolation=cv2.INTER_AREA)  # scaled to 512x512
+
+            downsampled_image = downsample(
+                image_data, factor=downsampling_factor)  # downsampling image
 
             if jpegs:
                 plt.imshow(downsampled_image, cmap="gray")
@@ -58,9 +68,10 @@ def load_data(input_dir, process="uncrop", downsampling_factor=1, jpegs=False, o
             print(filename, i, f"{filename} not .mat")
 
     X = np.stack(X, axis=0)
-    y = np.reshape(y, (-1,1))
+    y = np.reshape(y, (-1, 1))
 
     return X, y
+
 
 def downsample(image, factor=1):
     """
@@ -110,21 +121,25 @@ def crop_nonzero(arr, include_index=False):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--process', type=str, default='uncrop', help='specify the process to be done. i.e, uncrop, crop, segment')
-    parser.add_argument('--input_path', type=str, default="data/set1", help='directory of input data')
-    parser.add_argument('--output_path', type=str, default="jpegs/uncropped32/", help='directory of output data')
+    parser.add_argument('--process', type=str, default='uncrop',
+                        help='specify the process to be done. i.e, uncrop, crop, segment')
+    parser.add_argument('--input_path', type=str,
+                        default="data/set1", help='directory of input data')
+    parser.add_argument('--output_path', type=str,
+                        default="jpegs/uncropped32/", help='directory of output data')
     args = parser.parse_args()
 
     process = args.process
     input_dir = args.input_path
     output_dir = args.output_path
 
-    X, y = load_data(input_dir, process=process, downsampling_factor=8, output_dir=output_dir) 
+    X, y = load_data(input_dir, process=process,
+                     downsampling_factor=8, output_dir=output_dir)
     print(f"X shape: {X.shape}, Y shape: {y.shape}")
 
     fig, axes = plt.subplots(nrows=2, ncols=5, figsize=(12, 6))
     axes = axes.flatten()
-    for i in range(10):        
+    for i in range(10):
         axes[i].imshow(X[i], cmap="gray")
 
     for ax in axes:
