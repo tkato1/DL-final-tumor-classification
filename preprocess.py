@@ -134,7 +134,7 @@ if __name__ == "__main__":
     output_dir = args.output_path
 
     X, y = load_data(input_dir, process=process,
-                     downsampling_factor=8, output_dir=output_dir, jpegs=True)
+                     downsampling_factor=4, output_dir=output_dir, jpegs=True)
     print(f"X shape: {X.shape}, Y shape: {y.shape}")
 
     fig, axes = plt.subplots(nrows=2, ncols=5, figsize=(12, 6))
