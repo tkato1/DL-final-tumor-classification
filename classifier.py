@@ -126,7 +126,7 @@ def main():
              history.history['accuracy'])
     plt.plot(np.linspace(0, epochs, epochs, endpoint=True),
              history.history['val_accuracy'])
-    plt.title('Accuracy vs Epochs')
+    plt.title(f"Accuracy vs Epochs for {args.process} images")
     plt.legend(['Training_Accuracy', 'Validation_Accuracy'])
     plt.xlabel('Epochs')
     plt.xticks(np.arange(0, epochs+1, 100))
@@ -151,6 +151,7 @@ def main():
     make_confusion_matrix(confusion,
                           categories=["Glioma", "Meningioma",
                                       "Pituitary Tumor"],
+                          title=f"Confusion Matrix",
                           output_file=f"visualizations/{args.process}/confusion_matrix")
 
 if __name__ == '__main__':
