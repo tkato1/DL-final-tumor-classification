@@ -45,7 +45,7 @@ def main():
     test  model for a number of epochs.
     '''
 
-    X, y = load_data("data/set1", downsampling_factor=4, process="segment")
+    X, y = load_data("data/set1", downsampling_factor=4)
     X = tf.convert_to_tensor(X, dtype=tf.float32)
     y = tf.convert_to_tensor(y, dtype=tf.int32)
     y_not_one_hot = y
@@ -88,7 +88,7 @@ def main():
     model.add(tf.keras.layers.BatchNormalization())
     model.add(tf.keras.layers.ReLU())
     model.add(tf.keras.layers.Flatten())
-    model.add(tf.keras.layers.Dense(5, activation="softmax"))
+    model.add(tf.keras.layers.Dense(2, activation="softmax"))
     model.add(tf.keras.layers.Dense(3))
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
@@ -114,7 +114,7 @@ def main():
     plt.xticks(np.arange(0, epochs+1, 100))
     plt.yticks(np.arange(0, 1.01, .2))
     plt.ylabel('Accuracy')
-    plt.savefig("visualizations/segmented_training_plot")
+    plt.savefig("visualizations/segmented_training_plot_dense_2")
     plt.show()
 
     y_prob = model.predict(train_test_inputs)
@@ -136,7 +136,7 @@ def main():
     make_confusion_matrix(confusion,
                           categories=["Glioma", "Meningioma",
                                       "Pituitary Tumor"],
-                          output_file="visualizations/confusion_matrix_seg")
+                          output_file="visualizations/confusion_matrix_seg_dense_2")
 
 
 if __name__ == '__main__':
