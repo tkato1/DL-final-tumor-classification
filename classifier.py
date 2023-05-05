@@ -94,7 +94,7 @@ def main():
     optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
     loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
     metrics = ["accuracy"]
-    epochs = 10
+    epochs = 700
 
     model.compile(optimizer=optimizer,
                   loss=loss,
