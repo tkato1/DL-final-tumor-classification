@@ -45,9 +45,15 @@ def main():
     test  model for a number of epochs.
     '''
 
-    X, y = load_data("data/set1", downsampling_factor=4)
+
+    X, y = load_data("data/set1", downsampling_factor=4, process="segment")
     X = tf.convert_to_tensor(X, dtype=tf.float32)
     y = tf.convert_to_tensor(y, dtype=tf.int32)
+    num_examples = np.arange(np.shape(X)[0])
+    #shuffle them 
+    num_examples = tf.random.shuffle(num_examples)
+    X = tf.gather(X, num_examples)
+    y = tf.gather(y, num_examples)
     y_not_one_hot = y
     y = tf.one_hot(y, 3, dtype=tf.float32)
     y = tf.reshape(y, (y.shape[0], y.shape[2]))
