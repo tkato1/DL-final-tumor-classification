@@ -38,6 +38,7 @@ def stats(confusion, num_classes=3):
 
     return accuracy, precision, specificity, sensitivity
 
+
 def split(X, y, df):
     df_to_size = {16:32, 8:64, 4:128} #maps downsampling factor to the image size
     d = df_to_size[df] #d is the dimension of image
@@ -79,13 +80,15 @@ def main():
     test  model for a number of epochs.
     '''
     parser = argparse.ArgumentParser()
-    parser.add_argument('--df', type=int, default=8,help='downsampling factor')
+    parser.add_argument('--df', type=int, default=8, help='downsampling factor')
+    parser.add_argument('--process', type=str, default="uncrop", help='process ie. uncrop, crop, segment')
+    parser.add_argument('--input_dir', type=str, default="data/set1", help="input data directory")
+    parser.add_argument('--lr', type=int, default=0.001, help='learning_rate')
+    parser.add_argument('--epochs', type=int, default=700, help='epochs')
     args = parser.parse_args()
-    df = args.df
 
-
-    X, y = load_data("data/set1", downsampling_factor=df, process="segment")
-    train_inputs, train_labels, validation_inputs, validation_labels, train_test_inputs, train_test_labels = split(X, y, df)
+    X, y = load_data(args.input_dir, downsampling_factor=args.df, process=args.process)
+    train_inputs, train_labels, validation_inputs, validation_labels, train_test_inputs, train_test_labels = split(X, y, args.df)
 
     model = Sequential()
     model.add(tf.keras.layers.Conv2D(32, 3, activation="relu"))
@@ -107,10 +110,10 @@ def main():
     model.add(tf.keras.layers.Dense(5, activation="softmax"))
     model.add(tf.keras.layers.Dense(3))
 
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=args.lr)
     loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
     metrics = ["accuracy"]
-    epochs = 700
+    epochs = args.epochs
 
     model.compile(optimizer=optimizer,
                   loss=loss,
@@ -129,7 +132,7 @@ def main():
     plt.xticks(np.arange(0, epochs+1, 100))
     plt.yticks(np.arange(0, 1.01, .2))
     plt.ylabel('Accuracy')
-    plt.savefig("visualizations/segmented_training_plot1")
+    plt.savefig(f"visualizations/{args.process}/training_accuracy")
     plt.show()
 
     y_prob = model.predict(train_test_inputs)
@@ -143,12 +146,12 @@ def main():
     print(f"accuracy: {accuracy}, precision: {precision}, specificity: {specificity}, sensitivity: {sensitivity}")
 
     with open('stats/stat.txt', 'a') as f:
-        f.write(f"accuracy: {accuracy}, precision: {precision}, specificity: {specificity}, sensitivity: {sensitivity}")
+        f.write(f"{args.process} || accuracy: {accuracy}, precision: {precision}, specificity: {specificity}, sensitivity: {sensitivity}")
 
     make_confusion_matrix(confusion,
                           categories=["Glioma", "Meningioma",
                                       "Pituitary Tumor"],
-                          output_file="visualizations/confusion_matrix_segment1")
+                          output_file=f"visualizations/{args.process}/confusion_matrix")
 
 if __name__ == '__main__':
     main()
