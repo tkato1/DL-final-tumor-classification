@@ -1,5 +1,7 @@
 # DL-final-tumor-classification
 
+This repository contains an exploration and reimplementation of this paper: https://doi.org/10.30534/ijatcse/2019/155862019.
+
 ## Installing Dependencies**
 conda env create -f environment.yml
 
@@ -8,4 +10,4 @@ Processes the data in /data into np.ndarray X of shape (number_of_images, image_
 Contains additional utils to prepare data for CNN.
 
 ## classifier.py
-Contains neural network implementaition and analysis
+Implementation of the CNN architecture described in the paper. Contains code for additional visualization and analysis of model performance
