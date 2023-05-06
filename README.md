@@ -11,3 +11,5 @@ Contains additional utils to prepare data for CNN.
 
 ## classifier.py
 Implementation of the CNN architecture described in the paper. Contains code for additional visualization and analysis of model performance
+
+Contributors: Toshiki Kato, Raphael Li, Alexander Zheng
