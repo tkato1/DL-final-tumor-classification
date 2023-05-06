@@ -1,9 +1,11 @@
 # DL-final-tumor-classification
 
-**Installing Dependencies**
+## Installing Dependencies**
 conda env create -f environment.yml
 
-**preprocess.py**
-Processes the data in /data into an array of images and its labels. Images are stored as an array of 2d arrays, and labels are an array of integers 1,2, or, 3, each representing a different class of tumor.
+## preprocess.py
+Processes the data in /data into np.ndarray X of shape (number_of_images, image_width, image_height), and np.ndarray y of shape (number_of_images, 1).
+Contains additional utils to prepare data for CNN.
 
-To visualize
+## classifier.py
+Contains neural network implementaition and analysis

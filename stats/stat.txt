@@ -1,2 +1,2 @@
-uncrop || accuracy: [0.97706065 0.98172628 0.99144635], precision: [0.94352159 0.99228792 0.97384807], specificity: [0.98281961 0.9934593  0.9882616 ], sensitivity: [0.95784148 0.96822742 0.99872286]uncrop || accuracy: [0.22706065 0.52877138 0.69828927], precision: [0.22706065 0.         0.        ], specificity: [0. 1. 1.], sensitivity: [1. 0. 0.]
-uncrop || accuracy: [0.76671851 0.46111975 0.69440124], precision: [0.         0.46111975 0.        ], specificity: [1. 0. 1.], sensitivity: [0. 1. 0.]
+uncrop || accuracy: [0.22900467 0.5311042  0.69790047], precision: [0.22900467 0.         0.        ], specificity: [0. 1. 1.], sensitivity: [1. 0. 0.]
+uncrop 32 || accuracy: [0.77021773 0.46539658 0.69517885], precision: [0.         0.46539658 0.        ], specificity: [1. 0. 1.], sensitivity: [0. 1. 0.]
