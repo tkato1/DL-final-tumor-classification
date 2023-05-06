@@ -124,7 +124,7 @@ if __name__ == "__main__":
     parser.add_argument('--process', type=str, default='uncrop',
                         help='specify the process to be done. i.e, uncrop, crop, segment')
     parser.add_argument('--input_path', type=str,
-                        default="data/set1", help='directory of input data')
+                        default="../data/test", help='directory of input data')
     parser.add_argument('--output_path', type=str,
                         default="jpegs/uncropped32/", help='directory of output data')
     args = parser.parse_args()
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     output_dir = args.output_path
 
     X, y = load_data(input_dir, process=process,
-                     downsampling_factor=4, output_dir=output_dir, jpegs=True)
+                     downsampling_factor=4, output_dir=output_dir)
     print(f"X shape: {X.shape}, Y shape: {y.shape}")
 
     fig, axes = plt.subplots(nrows=2, ncols=5, figsize=(12, 6))

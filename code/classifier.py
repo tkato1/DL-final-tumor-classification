@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 from matplotlib import pyplot as plt
-from code.preprocess import load_data
+from preprocess import load_data
 from tensorflow.keras import Sequential, models
 from tensorflow.keras.optimizers import SGD
-from code.confusion_matrix import make_confusion_matrix
+from confusion_matrix import make_confusion_matrix
 
 import os
 import tensorflow as tf
@@ -80,11 +80,11 @@ def main():
     test  model for a number of epochs.
     '''
     parser = argparse.ArgumentParser()
-    parser.add_argument('--image_size', type=int, default=8, help='downsampling factor')
+    parser.add_argument('--image_size', type=int, default=64, help='image size, 32, 64, or 128')
     parser.add_argument('--process', type=str, default="uncrop", help='process ie. uncrop, crop, segment')
-    parser.add_argument('--input_dir', type=str, default="data/set1", help="input data directory")
+    parser.add_argument('--input_dir', type=str, default="../data/raw", help="input data directory")
     parser.add_argument('--lr', type=int, default=0.001, help='learning_rate')
-    parser.add_argument('--epochs', type=int, default=700, help='epochs')
+    parser.add_argument('--epochs', type=int, default=600, help='epochs')
     args = parser.parse_args()
 
     X, y = load_data(args.input_dir, downsampling_factor=size_to_df[args.image_size], process=args.process)
@@ -132,27 +132,26 @@ def main():
     plt.xticks(np.arange(0, epochs+1, 100))
     plt.yticks(np.arange(0, 1.01, .2))
     plt.ylabel('Accuracy')
-    plt.savefig(f"visualizations/{args.process}/training_accuracy{args.image_size}")
+    plt.savefig(f"../visualizations/{args.process}/training_accuracy{args.image_size}1")
     plt.show()
 
     y_prob = model.predict(train_test_inputs)
     y_pred = np.argmax(y_prob, axis=1)
 
     confusion = tf.math.confusion_matrix(labels=train_test_labels, predictions=y_pred).numpy()
-    print("confusion matrix:\n", confusion, confusion.shape)
+    print("confusion matrix:\n", confusion)
 
     accuracy, precision, specificity, sensitivity = stats(confusion, 3)
+    print(f"accuracy: {accuracy}\nprecision: {precision}\nspecificity: {specificity}\nsensitivity: {sensitivity}\n")
 
-    print(f"accuracy: {accuracy}, precision: {precision}, specificity: {specificity}, sensitivity: {sensitivity}")
-
-    with open('stats/stat.txt', 'a') as f:
-        f.write(f"{args.process} || accuracy: {accuracy}, precision: {precision}, specificity: {specificity}, sensitivity: {sensitivity}\n")
+    with open('../stats/stat.txt', 'a') as f:
+        f.write(f"{args.process} || accuracy: {accuracy}, precision: {precision}, specificity: {specificity}, sensitivity: {sensitivity}")
 
     make_confusion_matrix(confusion,
                           categories=["Glioma", "Meningioma",
                                       "Pituitary Tumor"],
                           title=f"Confusion Matrix",
-                          output_file=f"visualizations/{args.process}/confusion_matrix{args.image_size}")
+                          output_file=f"../visualizations/{args.process}/confusion_matrix{args.image_size}1")
 
 if __name__ == '__main__':
     main()
