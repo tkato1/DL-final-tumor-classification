@@ -1,22 +1,17 @@
-from __future__ import absolute_import
-from matplotlib import pyplot as plt
-from preprocess import load_data
-from tensorflow.keras import Sequential, models
-from tensorflow.keras.optimizers import SGD
-from confusion_matrix import make_confusion_matrix
-
-import os
-import tensorflow as tf
-import numpy as np
-import random
-import math
 import argparse
+import os
+import numpy as np
+import tensorflow as tf
+
+from matplotlib import pyplot as plt
+from preprocess import load_data, split
+
+from confusion_matrix import make_confusion_matrix
 
 # ensures that we run only on cpu
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 size_to_df = {32:16, 64:8, 128:4}
-
 
 def stats(confusion, num_classes=3):
     accuracy = np.zeros(num_classes)
@@ -41,39 +36,6 @@ def stats(confusion, num_classes=3):
     return accuracy, precision, specificity, sensitivity
 
 
-def split(X, y, d):
-    X = tf.convert_to_tensor(X, dtype=tf.float32)
-    y = tf.convert_to_tensor(y, dtype=tf.int32)
-    num_examples = np.arange(np.shape(X)[0])
-    num_examples = tf.random.shuffle(num_examples)
-    X = tf.gather(X, num_examples)
-    y = tf.gather(y, num_examples)
-    y_not_one_hot = y
-    y = tf.one_hot(y, 3, dtype=tf.float32)
-    y = tf.reshape(y, (y.shape[0], y.shape[2]))
-
-    train_inputs = np.array([np.array(val) for val in X])[:2100]
-    train_inputs = train_inputs.reshape(-1, 1, d, d)
-    train_inputs = train_inputs.transpose(0, 2, 3, 1)
-    train_labels = y[:2100]
-
-    validation_inputs = np.array([np.array(val) for val in X])[2100:2582]
-    validation_inputs = validation_inputs.reshape(-1, 1, d, d)
-    validation_inputs = validation_inputs.transpose(0, 2, 3, 1)
-    validation_labels = y[2100:2582]
-
-    test_inputs = np.array([np.array(val) for val in X])[2582:]
-    test_inputs = test_inputs.reshape(-1, 1, d, d)
-    test_inputs = test_inputs.transpose(0, 2, 3, 1)
-
-    train_test_inputs = tf.convert_to_tensor(np.concatenate(
-        [train_inputs, test_inputs], 0), dtype=tf.float32)
-    train_test_labels = tf.convert_to_tensor(np.concatenate(
-        [y_not_one_hot[:2100], y_not_one_hot[2582:]], 0), dtype=tf.int32)
-    
-    return train_inputs, train_labels, validation_inputs, validation_labels, train_test_inputs, train_test_labels
-
-
 def main():
     '''
     Read in MRI data of 3 classes, initialize model, and train and 
@@ -90,7 +52,7 @@ def main():
     X, y = load_data(args.input_dir, downsampling_factor=size_to_df[args.image_size], process=args.process)
     train_inputs, train_labels, validation_inputs, validation_labels, train_test_inputs, train_test_labels = split(X, y, args.image_size)
 
-    model = Sequential()
+    model = tf.keras.Sequential()
     model.add(tf.keras.layers.Conv2D(32, 3, activation="relu"))
     model.add(tf.keras.layers.BatchNormalization())
     model.add(tf.keras.layers.ReLU())
@@ -142,10 +104,10 @@ def main():
     print("confusion matrix:\n", confusion)
 
     accuracy, precision, specificity, sensitivity = stats(confusion, 3)
-    print(f"accuracy: {accuracy}\nprecision: {precision}\nspecificity: {specificity}\nsensitivity: {sensitivity}\n")
+    print(f"accuracy: {accuracy}\nprecision: {precision}\nspecificity: {specificity}\nsensitivity: {sensitivity}")
 
     with open('../stats/stat.txt', 'a') as f:
-        f.write(f"{args.process} || accuracy: {accuracy}, precision: {precision}, specificity: {specificity}, sensitivity: {sensitivity}")
+        f.write(f"{args.process} {args.image_size} || accuracy: {accuracy}, precision: {precision}, specificity: {specificity}, sensitivity: {sensitivity}\n")
 
     make_confusion_matrix(confusion,
                           categories=["Glioma", "Meningioma",

@@ -118,6 +118,39 @@ def crop_nonzero(arr, include_index=False):
         return cropped_arr
 
 
+def split(X, y, d):
+    X = tf.convert_to_tensor(X, dtype=tf.float32)
+    y = tf.convert_to_tensor(y, dtype=tf.int32)
+    num_examples = np.arange(np.shape(X)[0])
+    num_examples = tf.random.shuffle(num_examples)
+    X = tf.gather(X, num_examples)
+    y = tf.gather(y, num_examples)
+    y_not_one_hot = y
+    y = tf.one_hot(y, 3, dtype=tf.float32)
+    y = tf.reshape(y, (y.shape[0], y.shape[2]))
+
+    train_inputs = np.array([np.array(val) for val in X])[:2100]
+    train_inputs = train_inputs.reshape(-1, 1, d, d)
+    train_inputs = train_inputs.transpose(0, 2, 3, 1)
+    train_labels = y[:2100]
+
+    validation_inputs = np.array([np.array(val) for val in X])[2100:2582]
+    validation_inputs = validation_inputs.reshape(-1, 1, d, d)
+    validation_inputs = validation_inputs.transpose(0, 2, 3, 1)
+    validation_labels = y[2100:2582]
+
+    test_inputs = np.array([np.array(val) for val in X])[2582:]
+    test_inputs = test_inputs.reshape(-1, 1, d, d)
+    test_inputs = test_inputs.transpose(0, 2, 3, 1)
+
+    train_test_inputs = tf.convert_to_tensor(np.concatenate(
+        [train_inputs, test_inputs], 0), dtype=tf.float32)
+    train_test_labels = tf.convert_to_tensor(np.concatenate(
+        [y_not_one_hot[:2100], y_not_one_hot[2582:]], 0), dtype=tf.int32)
+    
+    return train_inputs, train_labels, validation_inputs, validation_labels, train_test_inputs, train_test_labels
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
