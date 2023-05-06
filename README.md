@@ -2,7 +2,7 @@
 
 This repository contains an exploration and reimplementation of this paper: https://doi.org/10.30534/ijatcse/2019/155862019.
 
-## Installing Dependencies**
+## Installing Dependencies
 conda env create -f environment.yml
 
 ## preprocess.py
